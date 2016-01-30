@@ -1,0 +1,76 @@
+﻿using System;
+using System.IO;
+using System.Security.Cryptography;
+using LeapingGorilla.SecretStore.Interfaces;
+
+namespace LeapingGorilla.SecretStore
+{
+	public class EncryptionManager : IEncryptionManager
+	{
+		private readonly IKeyManager _keyManager;
+
+		public EncryptionManager(IKeyManager keyManager)
+		{
+			_keyManager = keyManager;
+		}
+
+		public EncryptionResult Encrypt(string keyId, byte[] dataToEncrypt)
+		{
+			var key = _keyManager.GenerateDataKey(keyId);
+			var result = new EncryptionResult
+			{
+				EncryptedDataKey = key.CipherTextKey
+			};
+
+			using (var symmetricKey = new AesManaged())
+			{
+				symmetricKey.Mode = CipherMode.CBC;
+				symmetricKey.Padding = PaddingMode.PKCS7;
+				symmetricKey.GenerateIV();
+				result.InitialisationVector = symmetricKey.IV;
+
+				using (var encryptor = symmetricKey.CreateEncryptor(key.PlainTextKey, result.InitialisationVector))
+				using (var output = new MemoryStream())
+				using (var cryptoOut = new CryptoStream(output, encryptor, CryptoStreamMode.Write))
+				{
+					cryptoOut.Write(dataToEncrypt, 0, dataToEncrypt.Length);
+					cryptoOut.FlushFinalBlock();
+					result.EncryptedData = output.ToArray();
+					
+					cryptoOut.Clear();
+				}
+				symmetricKey.Clear();
+			}
+
+			return result;
+		}
+
+		public byte[] Decrypt(string keyId, byte[] encryptedDataKey, byte[] iv, byte[] encryptedData)
+		{
+			var key = _keyManager.DecryptData(encryptedDataKey);
+			byte[] clearText;
+
+			using (var symmetricKey = new AesManaged())
+			{
+				symmetricKey.Mode = CipherMode.CBC;
+				symmetricKey.Padding = PaddingMode.PKCS7;
+
+				using (var decryptor = symmetricKey.CreateDecryptor(key, iv))
+				using (var output = new MemoryStream())
+				using (var cryptoOut = new CryptoStream(output, decryptor, CryptoStreamMode.Read))
+				{
+					int length = cryptoOut.Read(encryptedData, 0, encryptedData.Length);
+					clearText = new byte[length];
+					Array.Copy(output.ToArray(), clearText, length);
+
+					cryptoOut.Clear();
+					symmetricKey.Clear();
+				}
+			}
+
+
+
+			return clearText;
+		}
+	}
+}
