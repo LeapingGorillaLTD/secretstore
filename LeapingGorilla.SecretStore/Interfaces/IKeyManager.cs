@@ -1,16 +1,20 @@
-﻿namespace LeapingGorilla.SecretStore.Interfaces
+﻿using System;
+using LeapingGorilla.SecretStore.Exceptions;
+
+namespace LeapingGorilla.SecretStore.Interfaces
 {
 	public interface IKeyManager
 	{
-
 		/// <summary>
-		/// Encrypts the passed data with a Master Key. This method will encrypt 
-		/// a payload up to a maximum size of 4096 bytes. The master key with the 
-		/// specified ID will be used to encrypt the data.
+		/// Encrypts the passed data with a Master Key.
 		/// </summary>
 		/// <param name="keyId">The identifier for the master key.</param>
 		/// <param name="data">The data to encrypt.</param>
 		/// <returns>Encrypted data.</returns>
+		/// <exception cref="ArgumentNullException">Data is null</exception>
+		/// <exception cref="ArgumentException">Data is empty</exception>
+		/// <exception cref="PayloadTooLargeException">Data is too large to be encrypted</exception>
+		/// <exception cref="MasterKeyNotFoundException">No key could be found matching <see cref="keyId"/></exception>
 		byte[] EncryptData(string keyId, byte[] data);
 
 		/// <summary>
@@ -29,11 +33,15 @@
 		GenerateDataKeyResult GenerateDataKey(string keyId);
 
 		/// <summary>
-		/// Decrypts the passed data with a master key. This method will decrypt a 
-		/// payload of up to 6144 bytes returning the resulting clear text
+		/// Decrypts the passed data with a master key.
 		/// </summary>
-		/// <param name="encryptedData">The encrypted data to decrypt.</param>
+		/// <param name="keyId">The id of the key used to unprotect the data.</param>
+		/// <param name="data">The encrypted data to decrypt.</param>
 		/// <returns>Resulting clear text.</returns>
-		byte[] DecryptData(byte[] encryptedData);
+		/// <exception cref="ArgumentNullException">Data is null</exception>
+		/// <exception cref="ArgumentException">Data is empty</exception>
+		/// <exception cref="PayloadTooLargeException">Data is too large to be decrypted</exception>
+		/// <exception cref="MasterKeyNotFoundException">No key could be found matching <see cref="keyId"/></exception>
+		byte[] DecryptData(string keyId, byte[] data);
 	}
 }

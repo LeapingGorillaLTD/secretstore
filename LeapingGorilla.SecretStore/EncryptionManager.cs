@@ -22,10 +22,8 @@ namespace LeapingGorilla.SecretStore
 				EncryptedDataKey = key.CipherTextKey
 			};
 
-			using (var symmetricKey = new AesManaged())
+			using (var symmetricKey = CreateSymmetricKey())
 			{
-				symmetricKey.Mode = CipherMode.CBC;
-				symmetricKey.Padding = PaddingMode.PKCS7;
 				symmetricKey.GenerateIV();
 				result.InitialisationVector = symmetricKey.IV;
 
@@ -47,30 +45,32 @@ namespace LeapingGorilla.SecretStore
 
 		public byte[] Decrypt(string keyId, byte[] encryptedDataKey, byte[] iv, byte[] encryptedData)
 		{
-			var key = _keyManager.DecryptData(encryptedDataKey);
+			var key = _keyManager.DecryptData(keyId, encryptedDataKey);
 			byte[] clearText;
 
-			using (var symmetricKey = new AesManaged())
+			using (var symmetricKey = CreateSymmetricKey())
+			using (var decryptor = symmetricKey.CreateDecryptor(key, iv))
+			using (var output = new MemoryStream())
+			using (var cryptoOut = new CryptoStream(output, decryptor, CryptoStreamMode.Write))
 			{
-				symmetricKey.Mode = CipherMode.CBC;
-				symmetricKey.Padding = PaddingMode.PKCS7;
+				cryptoOut.Write(encryptedData, 0, encryptedData.Length);
+				cryptoOut.FlushFinalBlock();
+				clearText = output.ToArray();
 
-				using (var decryptor = symmetricKey.CreateDecryptor(key, iv))
-				using (var output = new MemoryStream())
-				using (var cryptoOut = new CryptoStream(output, decryptor, CryptoStreamMode.Read))
-				{
-					int length = cryptoOut.Read(encryptedData, 0, encryptedData.Length);
-					clearText = new byte[length];
-					Array.Copy(output.ToArray(), clearText, length);
-
-					cryptoOut.Clear();
-					symmetricKey.Clear();
-				}
+				cryptoOut.Clear();
+				symmetricKey.Clear();
 			}
 
-
-
 			return clearText;
+		}
+
+		private AesManaged CreateSymmetricKey()
+		{
+			return new AesManaged
+			{
+				Mode = CipherMode.CBC,
+				Padding = PaddingMode.PKCS7
+			};
 		}
 	}
 }

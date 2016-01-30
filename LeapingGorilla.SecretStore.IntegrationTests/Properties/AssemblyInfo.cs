@@ -1,15 +1,14 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("LeapingGorilla.SecretStore.Aws.IntegrationTests")]
+[assembly: AssemblyTitle("LeapingGorilla.SecretStore.IntegrationTests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("LeapingGorilla.SecretStore.Aws.IntegrationTests")]
+[assembly: AssemblyProduct("LeapingGorilla.SecretStore.IntegrationTests")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +19,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("48bfbf19-71e5-4abe-9ea5-6c9a9ca75ebf")]
+[assembly: Guid("c427187c-d2f8-43ef-88a3-10546451c448")]
 
 // Version information for an assembly consists of the following four values:
 //
