@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Net;
+using Amazon;
 using Amazon.KeyManagementService;
 using Amazon.KeyManagementService.Model;
 using LeapingGorilla.SecretStore.Aws.Exceptions;
@@ -15,9 +16,26 @@ namespace LeapingGorilla.SecretStore.Aws
 		public const int MaxEncryptPayloadSize = 4096;
 		public const int MaxDecryptPayloadSize = 6144;
 
-		private AmazonKeyManagementServiceClient CreateClient()
+		private readonly RegionEndpoint _regionEndpoint;
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="AwsKmsKeyManager"/> class.
+		/// </summary>
+		/// <param name="regionSystemName">Name of the region system i.e. eu-west-1 or us-west-2.</param>
+		/// <exception cref="System.ArgumentException">You must provide a Region System Name (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)</exception>
+		public AwsKmsKeyManager(string regionSystemName)
 		{
-			return new AmazonKeyManagementServiceClient();
+			if (String.IsNullOrWhiteSpace(regionSystemName))
+			{
+				throw new ArgumentException("You must provide a Region System Name (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)");
+			}
+
+			_regionEndpoint = RegionEndpoint.GetBySystemName(regionSystemName.ToLowerInvariant());
+		}
+
+		protected virtual IAmazonKeyManagementService CreateClient()
+		{
+			return new AmazonKeyManagementServiceClient(_regionEndpoint);
 		}
 
 		/// <summary>
@@ -31,9 +49,11 @@ namespace LeapingGorilla.SecretStore.Aws
 		/// <exception cref="System.ArgumentNullException"></exception>
 		/// <exception cref="System.ArgumentException">You must provide some data to encrypt</exception>
 		/// <exception cref="PayloadTooLargeException"></exception>
-		/// <exception cref="KeyManagementServiceUnavailable"></exception>
+		/// <exception cref="KeyManagementServiceUnavailableException"></exception>
 		public byte[] EncryptData(string keyId, byte[] data)
 		{
+			ValidateMasterKey(keyId);
+
 			if (data == null)
 			{
 				throw new ArgumentNullException(nameof(data));
@@ -70,7 +90,7 @@ namespace LeapingGorilla.SecretStore.Aws
 				}
 			} while (ShouldRetry(++tries, resultCode));
 
-			throw new KeyManagementServiceUnavailable(resultCode);
+			throw new KeyManagementServiceUnavailableException(resultCode);
 		}
 
 		/// <summary>
@@ -82,9 +102,11 @@ namespace LeapingGorilla.SecretStore.Aws
 		/// <returns>Result containing the plaintext representation of the generated data key
 		/// which can be used for encryption/decryption, an encrypted version of the
 		/// data key encrypted by the master key and the ID of the key that was used.</returns>
-		/// <exception cref="KeyManagementServiceUnavailable"></exception>
+		/// <exception cref="KeyManagementServiceUnavailableException"></exception>
 		public GenerateDataKeyResult GenerateDataKey(string keyId)
 		{
+			ValidateMasterKey(keyId);
+
 			HttpStatusCode resultCode;
 			int tries = 0;
 			do
@@ -110,7 +132,7 @@ namespace LeapingGorilla.SecretStore.Aws
 				}
 			} while (ShouldRetry(++tries, resultCode));
 
-			throw new KeyManagementServiceUnavailable(resultCode);
+			throw new KeyManagementServiceUnavailableException(resultCode);
 		}
 
 		/// <summary>
@@ -123,7 +145,7 @@ namespace LeapingGorilla.SecretStore.Aws
 		/// <exception cref="System.ArgumentNullException"></exception>
 		/// <exception cref="System.ArgumentException">You must provide some data to encrypt</exception>
 		/// <exception cref="PayloadTooLargeException"></exception>
-		/// <exception cref="KeyManagementServiceUnavailable"></exception>
+		/// <exception cref="KeyManagementServiceUnavailableException"></exception>
 		public byte[] DecryptData(string keyId, byte[] data)
 		{
 			if (data == null)
@@ -161,7 +183,20 @@ namespace LeapingGorilla.SecretStore.Aws
 				}
 			} while (ShouldRetry(++tries, resultCode));
 
-			throw new KeyManagementServiceUnavailable(resultCode);
+			throw new KeyManagementServiceUnavailableException(resultCode);
+		}
+
+		private void ValidateMasterKey(string keyId)
+		{
+			if (keyId == null)
+			{
+				throw new ArgumentNullException(nameof(keyId));
+			}
+
+			if (String.IsNullOrWhiteSpace(keyId))
+			{
+				throw new ArgumentException("You must provide a Key ID", nameof(keyId));
+			}
 		}
 
 		private static bool ShouldRetry(int counter, HttpStatusCode statusCode)

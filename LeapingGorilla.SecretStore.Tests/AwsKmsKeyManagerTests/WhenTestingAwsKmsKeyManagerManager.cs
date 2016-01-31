@@ -8,5 +8,14 @@ namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests
 	{
 		[ItemUnderTest]
 		public AwsKmsKeyManager Manager { get; set; }
+
+		[Dependency]
+		public string RegionEndpoint { get; set; }
+
+		protected override void CreateManualDependencies()
+		{
+			base.CreateManualDependencies();
+			RegionEndpoint = "unknown";
+		}
 	}
 }
