@@ -44,7 +44,7 @@ namespace LeapingGorilla.SecretStore
 
 		public byte[] Decrypt(string keyId, byte[] encryptedDataKey, byte[] iv, byte[] encryptedData)
 		{
-			var key = _keyManager.DecryptData(keyId, encryptedDataKey);
+			var key = _keyManager.DecryptData(encryptedDataKey);
 			byte[] clearText;
 
 			using (var symmetricKey = CreateSymmetricKey())

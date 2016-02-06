@@ -47,7 +47,7 @@ namespace LeapingGorilla.SecretStore.Tests.RsaKeyManagerTests.DecryptDataTests
 		{
 			try
 			{
-				Manager.DecryptData(_keyId, _data);
+				Manager.DecryptData(_data);
 			}
 			catch (Exception ex)
 			{

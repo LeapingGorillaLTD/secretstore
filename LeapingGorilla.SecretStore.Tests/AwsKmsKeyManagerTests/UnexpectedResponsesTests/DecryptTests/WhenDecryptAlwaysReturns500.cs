@@ -37,7 +37,7 @@ namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests.UnexpectedRespo
 		{
 			try
 			{
-				Manager.DecryptData(KeyId, _data);
+				Manager.DecryptData(_data);
 			}
 			catch (Exception e)
 			{

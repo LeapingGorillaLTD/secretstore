@@ -10,8 +10,25 @@ namespace LeapingGorilla.SecretStore.Interfaces
 	/// </summary>
 	public interface IRsaKeyStore
 	{
+		/// <summary>
+		/// Gets the public key for the key with the given ID.
+		/// </summary>
+		/// <param name="keyId">The key identifier.</param>
+		/// <returns>RSAParameters for the public key with the given name.</returns>
 		RSAParameters GetPublicKey(string keyId);
 
+		/// <summary>
+		/// Gets the private key for the key with the specified ID.
+		/// </summary>
+		/// <param name="keyId">The key identifier.</param>
+		/// <returns>RSAParameters for the private key with the given name.</returns>
 		RSAParameters GetPrivateKey(string keyId);
+
+		/// <summary>
+		/// Gets the key which is used for signing requests. This should be a 
+		/// separate key which is always available.
+		/// </summary>
+		/// <returns>RSAParameters for a signing key.</returns>
+		RSAParameters GetSigningKey();
 	}
 }

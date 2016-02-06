@@ -29,7 +29,7 @@ namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests.DecryptDataTest
 		{
 			try
 			{
-				Manager.DecryptData(_keyId, _data);
+				Manager.DecryptData(_data);
 			}
 			catch (Exception ex)
 			{

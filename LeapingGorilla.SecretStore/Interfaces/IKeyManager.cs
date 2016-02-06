@@ -35,13 +35,12 @@ namespace LeapingGorilla.SecretStore.Interfaces
 		/// <summary>
 		/// Decrypts the passed data with a master key.
 		/// </summary>
-		/// <param name="keyId">The id of the key used to unprotect the data.</param>
 		/// <param name="data">The encrypted data to decrypt.</param>
 		/// <returns>Resulting clear text.</returns>
 		/// <exception cref="ArgumentNullException">Data is null</exception>
 		/// <exception cref="ArgumentException">Data is empty</exception>
 		/// <exception cref="PayloadTooLargeException">Data is too large to be decrypted</exception>
 		/// <exception cref="MasterKeyNotFoundException">No key could be found matching <see cref="keyId"/></exception>
-		byte[] DecryptData(string keyId, byte[] data);
+		byte[] DecryptData(byte[] data);
 	}
 }

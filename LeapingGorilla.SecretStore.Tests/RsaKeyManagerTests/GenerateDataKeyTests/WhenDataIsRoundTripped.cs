@@ -38,7 +38,7 @@ namespace LeapingGorilla.SecretStore.Tests.RsaKeyManagerTests.GenerateDataKeyTes
 		public void DataKeyIsGeneratedAndRoundTripped()
 		{
 			_result = Manager.GenerateDataKey(_keyId);
-			_decryptedCipherText = Manager.DecryptData(_keyId, _result.CipherTextKey);
+			_decryptedCipherText = Manager.DecryptData(_result.CipherTextKey);
 		}
 
 		[Then]

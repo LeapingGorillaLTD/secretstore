@@ -139,14 +139,13 @@ namespace LeapingGorilla.SecretStore.Aws
 		/// Decrypts the passed data with a master key. This method will decrypt a
 		/// payload of up to 6144 bytes returning the resulting clear text
 		/// </summary>
-		/// <param name="keyId">The id of the key used to unprotect the data.</param>
 		/// <param name="data">The encrypted data to decrypt.</param>
 		/// <returns>Resulting clear text.</returns>
 		/// <exception cref="System.ArgumentNullException"></exception>
 		/// <exception cref="System.ArgumentException">You must provide some data to encrypt</exception>
 		/// <exception cref="PayloadTooLargeException"></exception>
 		/// <exception cref="KeyManagementServiceUnavailableException"></exception>
-		public byte[] DecryptData(string keyId, byte[] data)
+		public byte[] DecryptData(byte[] data)
 		{
 			if (data == null)
 			{
