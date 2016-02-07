@@ -23,7 +23,7 @@ namespace LeapingGorilla.SecretStore.Tests.RsaKeyManagerTests.DecryptDataTests
 		}
 
 		[When]
-		public void WeCallEncrypt()
+		public void WeCallDecrypt()
 		{
 			try
 			{

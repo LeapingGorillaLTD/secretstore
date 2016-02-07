@@ -16,7 +16,7 @@ namespace LeapingGorilla.SecretStore.Tests.RsaKeyManagerTests.EncryptDataTests
 		[Given]
 		public void WeHaveData()
 		{
-			_data = Enumerable.Repeat<byte>(1, MaxEncryptionPayloadSizeInBytes).ToArray();
+			_data = Enumerable.Repeat<byte>(1, ExpectedMaxEncryptionPayloadSizeInBytes).ToArray();
 		}
 
 		[Given]

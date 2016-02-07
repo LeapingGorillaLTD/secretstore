@@ -17,7 +17,7 @@ namespace LeapingGorilla.SecretStore.Tests.RsaKeyManagerTests.EncryptDataTests
 		[Given]
 		public void WeHaveData()
 		{
-			_data = new byte[MaxEncryptionPayloadSizeInBytes + 1];
+			_data = new byte[ExpectedMaxEncryptionPayloadSizeInBytes + 1];
 		}
 
 		[Given]
@@ -71,7 +71,7 @@ namespace LeapingGorilla.SecretStore.Tests.RsaKeyManagerTests.EncryptDataTests
 		public void ExceptionShouldContainExpectedPayloadSizes()
 		{
 			var ex = (PayloadTooLargeException)_ex;
-			Assert.That(ex.MaxPayloadSize, Is.EqualTo(MaxEncryptionPayloadSizeInBytes));
+			Assert.That(ex.MaxPayloadSize, Is.EqualTo(ExpectedMaxEncryptionPayloadSizeInBytes));
 			Assert.That(ex.ProvidedPayloadSize, Is.EqualTo(_data.Length));
 		}
 	}

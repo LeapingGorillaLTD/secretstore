@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Security.Cryptography;
 using LeapingGorilla.SecretStore.Exceptions;
 using LeapingGorilla.SecretStore.Tests.Properties;
@@ -8,22 +9,25 @@ using NUnit.Framework;
 
 namespace LeapingGorilla.SecretStore.Tests.RsaKeyManagerTests.DecryptDataTests
 {
-	public class WhenDataIsTooLarge : WhenTestingRsaKeyManager
+	public class WhenDataIsTamperedWith : WhenTestingRsaKeyManager
 	{
 		private byte[] _data;
 		private string _keyId;
 		private Exception _ex;
 
-		[Given]
-		public void WeHaveData()
-		{
-			_data = new byte[MaxDecryptionPayloadSizeInBytes + 1];
-		}
-
-		[Given]
+		[Given(0)]
 		public void WeHaveKeyId()
 		{
 			_keyId = "Test";
+		}
+
+		[Given(1)]
+		public void WeHaveData()
+		{
+			var temp = Manager.EncryptData(_keyId, new byte[ExpectedMaxEncryptionPayloadSizeInBytes]).ToList();
+			temp.Add(1);
+			_data = temp.ToArray();
+			temp.Clear();
 		}
 
 		[Given]
@@ -43,7 +47,7 @@ namespace LeapingGorilla.SecretStore.Tests.RsaKeyManagerTests.DecryptDataTests
 		}
 
 		[When]
-		public void WeCallEncrypt()
+		public void WeCallDecrypt()
 		{
 			try
 			{
@@ -64,15 +68,7 @@ namespace LeapingGorilla.SecretStore.Tests.RsaKeyManagerTests.DecryptDataTests
 		[Then]
 		public void ExceptionShouldBeExpectedType()
 		{
-			Assert.That(_ex, Is.TypeOf<PayloadTooLargeException>());
-		}
-
-		[Then]
-		public void ExceptionShouldContainExpectedPayloadSizes()
-		{
-			var ex = (PayloadTooLargeException)_ex;
-			Assert.That(ex.MaxPayloadSize, Is.EqualTo(MaxDecryptionPayloadSizeInBytes));
-			Assert.That(ex.ProvidedPayloadSize, Is.EqualTo(_data.Length));
+			Assert.That(_ex, Is.TypeOf<InvalidDataFormatException>());
 		}
 	}
 }

@@ -12,7 +12,7 @@ namespace LeapingGorilla.SecretStore
 		public const int DataKeyLengthInBytes = 128 / 8; // 128-bit key, 8 bits per byte == 16 bytes
 
 		private static readonly HashAlgorithmName SigningAlgorithm = HashAlgorithmName.SHA512;
-		private static readonly RSASignaturePadding SigningPadding = RSASignaturePadding.Pss;
+		private static readonly RSASignaturePadding SigningPadding = RSASignaturePadding.Pkcs1;
 
 		private readonly IRsaKeyStore _keyStore;
 
@@ -98,12 +98,6 @@ namespace LeapingGorilla.SecretStore
 			var key = _keyStore.GetPrivateKey(GetKeyId(data, out keyIdSegmentLength));
 			var toDecrypt = new byte[data.Length - keyIdSegmentLength];
 			Buffer.BlockCopy(data, keyIdSegmentLength, toDecrypt, 0, toDecrypt.Length);
-
-			var maxPayload = key.Modulus.Length; // Size of the key in bytes
-			if (toDecrypt.Length > maxPayload)
-			{
-				throw new PayloadTooLargeException(maxPayload, toDecrypt.Length);
-			}
 			
 			using (var rsa = new RSACryptoServiceProvider())
 			{
@@ -119,6 +113,12 @@ namespace LeapingGorilla.SecretStore
 			return (int)Math.Floor(modulusSizeInBytes - 2m - (2 * hashSizeInBytes));
 		}
 
+		/// <summary>
+		/// Generates a key name segment and prepends it to the passed protected data.
+		/// </summary>
+		/// <param name="keyId">The key identifier we are generating a segment for.</param>
+		/// <param name="protectedData">The protected data.</param>
+		/// <returns>Byte array containing a key ID and the protected data.</returns>
 		public byte[] PrependKeyIdSegment(string keyId, byte[] protectedData)
 		{
 			var keyIdBytes = Encoding.UTF8.GetBytes(keyId);
@@ -135,18 +135,20 @@ namespace LeapingGorilla.SecretStore
 				sig = signingKey.SignData(toSign, SigningAlgorithm, SigningPadding);
 			}
 
-			byte[] keyNameSegment = new byte[8 + keyIdBytes.Length + sig.Length];
+			byte[] keyNameSegment = new byte[8 + keyIdBytes.Length + sig.Length + protectedData.Length];
 			Buffer.BlockCopy(BitConverter.GetBytes(keyIdBytes.Length), 0, keyNameSegment, 0, 4);
 			Buffer.BlockCopy(BitConverter.GetBytes(sig.Length), 0, keyNameSegment, 4, 4);
-			Buffer.BlockCopy(keyIdBytes, 0, keyNameSegment, 8, keyIdBytes.Length);
-			Buffer.BlockCopy(sig, 0, keyNameSegment, 8 + keyIdBytes.Length, sig.Length);
+			Buffer.BlockCopy(sig, 0, keyNameSegment, 8, sig.Length);
+			Buffer.BlockCopy(toSign, 0, keyNameSegment, 8 + sig.Length, toSign.Length);
 
 			return keyNameSegment;
 		}
 
 		public string GetKeyId(byte[] protectedData, out int keyIdSegmentLength)
 		{
-			if (protectedData.Length < 8)
+			const int idxEndOfLengths = 8; // 2 x Int32 at start of data block account for 8 bytes
+
+			if (protectedData == null || !protectedData.Any() || protectedData.Length < idxEndOfLengths)
 			{
 				throw new InvalidDataFormatException();
 			}
@@ -154,31 +156,29 @@ namespace LeapingGorilla.SecretStore
 			var keyNameSize = BitConverter.ToInt32(protectedData, 0);
 			var sigSize = BitConverter.ToInt32(protectedData, 4);
 
-			keyIdSegmentLength = 8 + keyNameSize + sigSize;
+			keyIdSegmentLength = idxEndOfLengths + keyNameSize + sigSize;
 
-			if (protectedData.Length < keyNameSize + sigSize + 8)
+			if (protectedData.Length < keyIdSegmentLength)
 			{
 				throw new InvalidDataFormatException();
 			}
 			
 			var sig = new byte[sigSize];
-			Buffer.BlockCopy(protectedData, 8 + keyNameSize, sig, 0, sigSize);
+			Buffer.BlockCopy(protectedData, idxEndOfLengths, sig, 0, sigSize);
 
-			var toSign = new byte[protectedData.Length - keyIdSegmentLength];
-			Buffer.BlockCopy(protectedData, 8, toSign, 0, keyNameSize);
-			Buffer.BlockCopy(protectedData, keyIdSegmentLength, toSign, keyNameSize, protectedData.Length - keyIdSegmentLength);
-
+			var sizeOfProtectedDataPlusKeyIdBytes = protectedData.Length - idxEndOfLengths - sigSize;
+			
 			using (var signingKey = new RSACryptoServiceProvider())
 			{
 				signingKey.ImportParameters(_keyStore.GetSigningKey());
 
-				if (!signingKey.VerifyData(toSign, sig, SigningAlgorithm, SigningPadding))
+				if (!signingKey.VerifyData(protectedData, idxEndOfLengths + sigSize, sizeOfProtectedDataPlusKeyIdBytes, sig, SigningAlgorithm, SigningPadding))
 				{
 					throw new InvalidDataFormatException();
 				}
 			}
 
-			return Encoding.UTF8.GetString(protectedData, 8, keyNameSize);
+			return Encoding.UTF8.GetString(protectedData, idxEndOfLengths + sigSize, keyNameSize);
 		}
 	}
 }

@@ -19,7 +19,7 @@ namespace LeapingGorilla.SecretStore.Tests.EncryptionManagerTests
 		[When]
 		public void WeEncryptAndDecryptTheString()
 		{
-			_result = Manager.Encrypt(ValidKeyId, Encoding.Default.GetBytes(_plainText));
+			_result = Manager.Encrypt(ValidKeyId, Encoding.UTF8.GetBytes(_plainText));
 			_decryptResult = Manager.Decrypt(ValidKeyId, _result.EncryptedDataKey, _result.InitialisationVector, _result.EncryptedData);
 		}
 
@@ -38,7 +38,7 @@ namespace LeapingGorilla.SecretStore.Tests.EncryptionManagerTests
 		[Then]
 		public void DecryptedResultShouldBeStartingString()
 		{
-			var str = Encoding.Default.GetString(_decryptResult);
+			var str = Encoding.UTF8.GetString(_decryptResult);
 			Assert.That(str, Is.EqualTo(_plainText));
 		}
 	}
