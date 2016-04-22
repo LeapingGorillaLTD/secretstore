@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using LeapingGorilla.SecretStore.Interfaces;
 
 namespace LeapingGorilla.SecretStore
@@ -8,33 +9,56 @@ namespace LeapingGorilla.SecretStore
 		private readonly IProtectedSecretRepository _secrets;
 		private readonly IEncryptionManager _encryptionManager;
 
+		private static readonly Encoding SecretEncoding = Encoding.UTF8;
+
 		public SecretStore(IProtectedSecretRepository secrets, IEncryptionManager encryptionManager)
 		{
 			_secrets = secrets;
 			_encryptionManager = encryptionManager;
 		}
-
-
-		public void Save(Secret secret)
+		
+		public void Save(string keyName, Secret secret)
 		{
-			//var ps = Protect(secret);
-
-			throw new NotImplementedException();
+			var ps = Protect(keyName, secret);
+			_secrets.Save(ps);
 		}
 
 		public Secret Get(string name)
 		{
-			throw new NotImplementedException();
+			return Unprotect(_secrets.Get(name));
 		}
 
 		public ProtectedSecret Protect(string keyName, Secret secret)
 		{
-			throw new NotImplementedException();
+			if (secret == null)
+			{
+				throw new ArgumentNullException(nameof(secret));
+			}
+
+			var encryptedSecret = _encryptionManager.Encrypt(keyName, SecretEncoding.GetBytes(secret.Value));
+			return new ProtectedSecret
+			{
+				KeyId = keyName,
+				InitialisationVector = encryptedSecret.InitialisationVector,
+				Name = secret.Name,
+				ProtectedKey = encryptedSecret.EncryptedDataKey,
+				ProtectedValue = encryptedSecret.EncryptedData
+			};
 		}
 
 		public Secret Unprotect(ProtectedSecret protectedSecret)
 		{
-			throw new NotImplementedException();
+			if (protectedSecret == null)
+			{
+				throw new ArgumentNullException(nameof(protectedSecret));
+			}
+
+			var rawValue = _encryptionManager.Decrypt(protectedSecret.KeyId, protectedSecret.ProtectedKey, protectedSecret.InitialisationVector, protectedSecret.ProtectedValue);
+			return new Secret
+			{
+				Name = protectedSecret.Name,
+				Value = SecretEncoding.GetString(rawValue)
+			};
 		}
 	}
 }

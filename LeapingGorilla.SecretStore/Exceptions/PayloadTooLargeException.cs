@@ -1,8 +1,8 @@
-﻿using System;
-
-namespace LeapingGorilla.SecretStore.Exceptions
+﻿namespace LeapingGorilla.SecretStore.Exceptions
 {
-	public class PayloadTooLargeException : Exception
+	///<summary>Thrown if the payload which is provided for encryption is too large to be encrytpted</summary>
+	/// <remarks>This is mainly relevant to RSA encryption where the max encryptable payload is a function of the key size</remarks>
+	public class PayloadTooLargeException : SecretStoreException
 	{
 		public int ProvidedPayloadSize { get; private set; }
 		public int MaxPayloadSize { get; private set; }

@@ -1,8 +1,7 @@
-﻿using System;
-
-namespace LeapingGorilla.SecretStore.Exceptions
+﻿namespace LeapingGorilla.SecretStore.Exceptions
 {
-	public class MasterKeyNotFoundException : Exception
+	///<summary>Thrown if a master key cannot be found in the key store</summary>
+	public class MasterKeyNotFoundException : SecretStoreException
 	{
 		public string KeyId { get; private set; }
 

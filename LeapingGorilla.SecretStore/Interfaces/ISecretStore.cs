@@ -5,8 +5,9 @@
 		/// <summary>
 		/// Saves a secret to the backing secret store.
 		/// </summary>
+		/// <param name="keyName">Name of the key to use to protect the secret.</param>
 		/// <param name="secret">The secret to save.</param>
-		void Save(Secret secret);
+		void Save(string keyName, Secret secret);
 
 		/// <summary>
 		/// Gets the secret with the specified name. Returns null if no secret with the 
