@@ -27,7 +27,7 @@
 		ProtectedSecret Protect(string keyName, Secret secret);
 
 		/// <summary>
-		/// Unprotects the specified protected secret.
+		/// Unprotects the given protected secret.
 		/// </summary>
 		/// <param name="protectedSecret">The protected secret.</param>
 		/// <returns>An unprotected secret.</returns>

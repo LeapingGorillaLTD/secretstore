@@ -38,11 +38,11 @@ namespace LeapingGorilla.SecretStore
 			var encryptedSecret = _encryptionManager.Encrypt(keyName, SecretEncoding.GetBytes(secret.Value));
 			return new ProtectedSecret
 			{
-				KeyId = keyName,
+				MasterKeyId = keyName,
 				InitialisationVector = encryptedSecret.InitialisationVector,
 				Name = secret.Name,
-				ProtectedKey = encryptedSecret.EncryptedDataKey,
-				ProtectedValue = encryptedSecret.EncryptedData
+				ProtectedDocumentKey = encryptedSecret.EncryptedDataKey,
+				ProtectedSecretValue = encryptedSecret.EncryptedData
 			};
 		}
 
@@ -53,7 +53,7 @@ namespace LeapingGorilla.SecretStore
 				throw new ArgumentNullException(nameof(protectedSecret));
 			}
 
-			var rawValue = _encryptionManager.Decrypt(protectedSecret.KeyId, protectedSecret.ProtectedKey, protectedSecret.InitialisationVector, protectedSecret.ProtectedValue);
+			var rawValue = _encryptionManager.Decrypt(protectedSecret.MasterKeyId, protectedSecret.ProtectedDocumentKey, protectedSecret.InitialisationVector, protectedSecret.ProtectedSecretValue);
 			return new Secret
 			{
 				Name = protectedSecret.Name,

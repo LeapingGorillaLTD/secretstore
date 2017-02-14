@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Net;
+using LeapingGorilla.SecretStore.Exceptions;
 
 namespace LeapingGorilla.SecretStore.Aws.Exceptions
 {
-	public class KeyManagementServiceUnavailableException : Exception
+	public class KeyManagementServiceUnavailableException : SecretStoreException
 	{
 		public HttpStatusCode LastStatusCode { get; private set; }
 

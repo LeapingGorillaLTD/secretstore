@@ -21,7 +21,7 @@ namespace LeapingGorilla.SecretStore
 				EncryptedDataKey = key.CipherTextKey
 			};
 
-			using (var symmetricKey = CreateSymmetricKey())
+			using (var symmetricKey = CreateSymmetricKeyAlgorithm())
 			{
 				symmetricKey.GenerateIV();
 				result.InitialisationVector = symmetricKey.IV;
@@ -47,7 +47,7 @@ namespace LeapingGorilla.SecretStore
 			var key = _keyManager.DecryptData(encryptedDataKey);
 			byte[] clearText;
 
-			using (var symmetricKey = CreateSymmetricKey())
+			using (var symmetricKey = CreateSymmetricKeyAlgorithm())
 			using (var decryptor = symmetricKey.CreateDecryptor(key, iv))
 			using (var output = new MemoryStream())
 			using (var cryptoOut = new CryptoStream(output, decryptor, CryptoStreamMode.Write))
@@ -63,7 +63,7 @@ namespace LeapingGorilla.SecretStore
 			return clearText;
 		}
 
-		private AesManaged CreateSymmetricKey()
+		private AesManaged CreateSymmetricKeyAlgorithm()
 		{
 			return new AesManaged
 			{

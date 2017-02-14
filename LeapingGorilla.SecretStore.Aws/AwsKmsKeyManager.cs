@@ -141,8 +141,8 @@ namespace LeapingGorilla.SecretStore.Aws
 		/// </summary>
 		/// <param name="data">The encrypted data to decrypt.</param>
 		/// <returns>Resulting clear text.</returns>
-		/// <exception cref="System.ArgumentNullException"></exception>
-		/// <exception cref="System.ArgumentException">You must provide some data to encrypt</exception>
+		/// <exception cref="ArgumentNullException"></exception>
+		/// <exception cref="ArgumentException">You must provide some data to encrypt</exception>
 		/// <exception cref="PayloadTooLargeException"></exception>
 		/// <exception cref="KeyManagementServiceUnavailableException"></exception>
 		public byte[] DecryptData(byte[] data)

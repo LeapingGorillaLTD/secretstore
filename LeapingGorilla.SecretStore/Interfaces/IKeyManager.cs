@@ -3,6 +3,7 @@ using LeapingGorilla.SecretStore.Exceptions;
 
 namespace LeapingGorilla.SecretStore.Interfaces
 {
+	///<summary>Global key manager used to encrypt or decrypt per-document keys</summary>
 	public interface IKeyManager
 	{
 		/// <summary>
