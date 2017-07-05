@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Threading.Tasks;
 using LeapingGorilla.SecretStore.Interfaces;
 
 namespace LeapingGorilla.SecretStore
@@ -23,9 +24,14 @@ namespace LeapingGorilla.SecretStore
 			_secrets.Save(ps);
 		}
 
-		public Secret Get(string name)
+		public Secret Get(string applicationName, string secretName)
 		{
-			return Unprotect(_secrets.Get(name));
+			return Unprotect(_secrets.Get(applicationName, secretName));
+		}
+
+		public async Task<Secret> GetAsync(string applicationName, string secretName)
+		{
+			return Unprotect(await _secrets.GetAsync(applicationName, secretName));
 		}
 
 		public ProtectedSecret Protect(string keyName, Secret secret)
@@ -40,7 +46,7 @@ namespace LeapingGorilla.SecretStore
 			{
 				MasterKeyId = keyName,
 				InitialisationVector = encryptedSecret.InitialisationVector,
-				Name = secret.Name,
+				Name = secret.SecretName,
 				ProtectedDocumentKey = encryptedSecret.EncryptedDataKey,
 				ProtectedSecretValue = encryptedSecret.EncryptedData
 			};
@@ -56,7 +62,7 @@ namespace LeapingGorilla.SecretStore
 			var rawValue = _encryptionManager.Decrypt(protectedSecret.MasterKeyId, protectedSecret.ProtectedDocumentKey, protectedSecret.InitialisationVector, protectedSecret.ProtectedSecretValue);
 			return new Secret
 			{
-				Name = protectedSecret.Name,
+				SecretName = protectedSecret.Name,
 				Value = SecretEncoding.GetString(rawValue)
 			};
 		}

@@ -2,7 +2,8 @@
 {
 	public class Secret
 	{
-		public string Name { get; set; }
+		public string ApplicationName { get; set; }
+		public string SecretName { get; set; }
 		public string Value { get; set; }
 	}
 }

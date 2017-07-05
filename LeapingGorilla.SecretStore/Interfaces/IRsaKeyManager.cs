@@ -12,7 +12,7 @@
 		/// The key Id segment is a single contiguous byte array which encapsulates the following 
 		/// data:
 		/// 
-		///  | Key Name Bytes Size | Sig Bytes Size | Sig | Key Name Bytes | Protected Data Bytes
+		///  | Key SecretName Bytes Size | Sig Bytes Size | Sig | Key SecretName Bytes | Protected Data Bytes
 		/// 
 		/// The first 4 bytes (0 to 3) are an Int32 containing the number of bytes in the Key Id (keyIdSize)
 		/// The second 4 bytes (4 to 7) are an Int32 containing the number of bytes in the signature (sigSize)

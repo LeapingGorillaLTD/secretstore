@@ -7,13 +7,13 @@ namespace LeapingGorilla.SecretStore.Tests.SecretsFromConfigurationTests.GetTest
 {
 	public class WhenSecretNotInConfig : WhenTestingSecretsFromConfiguration
 	{
-		private string _name;
+		private string _key;
 		private Exception _ex;
 
 		[Given]
 		public void WeHaveSecretDetails()
 		{
-			_name = "Missing";
+			_key = "Missing";
 		}
 
 		[When]
@@ -21,7 +21,7 @@ namespace LeapingGorilla.SecretStore.Tests.SecretsFromConfigurationTests.GetTest
 		{
 			try
 			{
-				SecretsConfig.Get(_name);
+				SecretsConfig.Get(_key);
 			}
 			catch (Exception e)
 			{
@@ -38,14 +38,14 @@ namespace LeapingGorilla.SecretStore.Tests.SecretsFromConfigurationTests.GetTest
 		[Then]
 		public void ExceptionShouldBeExpectedType()
 		{
-			Assert.That(_ex, Is.TypeOf<SecretNotFoundException>());
+			Assert.That(_ex, Is.TypeOf<SecretElementNotFoundException>());
 		}
 
 		[Then]
 		public void ExceptionShouldHaveMissingSecretDetails()
 		{
-			var e = (SecretNotFoundException)_ex;
-			Assert.That(e.SecretName, Is.EqualTo(_name));
+			var e = (SecretElementNotFoundException)_ex;
+			Assert.That(e.Key, Is.EqualTo(_key));
 		}
 	}
 }

@@ -5,9 +5,11 @@ using System.Net;
 using Amazon;
 using Amazon.KeyManagementService;
 using Amazon.KeyManagementService.Model;
+using Amazon.Runtime;
 using LeapingGorilla.SecretStore.Aws.Exceptions;
 using LeapingGorilla.SecretStore.Exceptions;
 using LeapingGorilla.SecretStore.Interfaces;
+using Polly;
 
 namespace LeapingGorilla.SecretStore.Aws
 {
@@ -18,16 +20,25 @@ namespace LeapingGorilla.SecretStore.Aws
 
 		private readonly RegionEndpoint _regionEndpoint;
 
+		private static readonly Policy<AmazonWebServiceResponse> RetryPolicy =
+			Policy
+				.Handle<KMSInternalException>()
+				.Or<KeyUnavailableException>()
+				.Or<DependencyTimeoutException>()
+				.OrResult<AmazonWebServiceResponse>(res => (int)res.HttpStatusCode == 503 || (int)res.HttpStatusCode == 500)
+				.Retry(2);
+
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AwsKmsKeyManager"/> class.
 		/// </summary>
 		/// <param name="regionSystemName">Name of the region system i.e. eu-west-1 or us-west-2.</param>
-		/// <exception cref="System.ArgumentException">You must provide a Region System Name (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)</exception>
+		/// <exception cref="System.ArgumentException">You must provide a Region System SecretName (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)</exception>
 		public AwsKmsKeyManager(string regionSystemName)
 		{
 			if (String.IsNullOrWhiteSpace(regionSystemName))
 			{
-				throw new ArgumentException("You must provide a Region System Name (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)");
+				throw new ArgumentException("You must provide a Region System SecretName (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)");
 			}
 
 			_regionEndpoint = RegionEndpoint.GetBySystemName(regionSystemName.ToLowerInvariant());
@@ -68,10 +79,8 @@ namespace LeapingGorilla.SecretStore.Aws
 			{
 				throw new PayloadTooLargeException(MaxEncryptPayloadSize, data.Length);
 			}
-
-			HttpStatusCode resultCode;
-			int tries = 0;
-			do
+			
+			var res = RetryPolicy.ExecuteAndCapture(() =>
 			{
 				using (var msPlainText = new MemoryStream(data))
 				using (var client = CreateClient())
@@ -82,15 +91,13 @@ namespace LeapingGorilla.SecretStore.Aws
 						Plaintext = msPlainText
 					};
 
-					var result = client.Encrypt(req);
-					if ((resultCode = result.HttpStatusCode) == HttpStatusCode.OK)
-					{
-						return result.CiphertextBlob.ToArray();
-					}
+					return client.Encrypt(req);
 				}
-			} while (ShouldRetry(++tries, resultCode));
+			});
 
-			throw new KeyManagementServiceUnavailableException(resultCode);
+			ValidateResponse(res);
+
+			return ((EncryptResponse)res.Result).CiphertextBlob.ToArray();
 		}
 
 		/// <summary>
@@ -107,9 +114,7 @@ namespace LeapingGorilla.SecretStore.Aws
 		{
 			ValidateMasterKey(keyId);
 
-			HttpStatusCode resultCode;
-			int tries = 0;
-			do
+			var res = RetryPolicy.ExecuteAndCapture(() =>
 			{
 				using (var client = CreateClient())
 				{
@@ -119,20 +124,19 @@ namespace LeapingGorilla.SecretStore.Aws
 						KeySpec = DataKeySpec.AES_128
 					};
 
-					var result = client.GenerateDataKey(req);
-					if ((resultCode = result.HttpStatusCode) == HttpStatusCode.OK)
-					{
-						return new GenerateDataKeyResult
-						{
-							KeyId = keyId,
-							CipherTextKey = result.CiphertextBlob.ToArray(),
-							PlainTextKey = result.Plaintext.ToArray()
-						};
-					}
+					return client.GenerateDataKey(req);
 				}
-			} while (ShouldRetry(++tries, resultCode));
+			});
 
-			throw new KeyManagementServiceUnavailableException(resultCode);
+			ValidateResponse(res);
+
+			var result = (GenerateDataKeyResponse)res.Result;
+			return new GenerateDataKeyResult
+			{
+				KeyId = keyId,
+				CipherTextKey = result.CiphertextBlob.ToArray(),
+				PlainTextKey = result.Plaintext.ToArray()
+			};
 		}
 
 		/// <summary>
@@ -162,9 +166,7 @@ namespace LeapingGorilla.SecretStore.Aws
 				throw new PayloadTooLargeException(MaxDecryptPayloadSize, data.Length);
 			}
 
-			HttpStatusCode resultCode;
-			int tries = 0;
-			do
+			var res = RetryPolicy.ExecuteAndCapture(() =>
 			{
 				using (var msData = new MemoryStream(data))
 				using (var client = CreateClient())
@@ -174,15 +176,13 @@ namespace LeapingGorilla.SecretStore.Aws
 						CiphertextBlob = msData
 					};
 
-					var result = client.Decrypt(req);
-					if ((resultCode = result.HttpStatusCode) == HttpStatusCode.OK)
-					{
-						return result.Plaintext.ToArray();
-					}
+					return client.Decrypt(req);
 				}
-			} while (ShouldRetry(++tries, resultCode));
+			});
 
-			throw new KeyManagementServiceUnavailableException(resultCode);
+			ValidateResponse(res);
+
+			return ((DecryptResponse)res.Result).Plaintext.ToArray();
 		}
 
 		private void ValidateMasterKey(string keyId)
@@ -198,22 +198,22 @@ namespace LeapingGorilla.SecretStore.Aws
 			}
 		}
 
-		private static bool ShouldRetry(int counter, HttpStatusCode statusCode)
+		private void ValidateResponse(PolicyResult<AmazonWebServiceResponse> res)
 		{
-			bool codeCanBeRetried;
-			switch ((int)statusCode)
+			if (res.Result == null )
 			{
-				case 500:
-				case 503:
-					codeCanBeRetried = true;
-					break;
-
-				default:
-					codeCanBeRetried = false;
-					break;
+				if (res.FinalHandledResult == null && res.FinalException != null)
+				{
+					throw res.FinalException;
+				}
+				
+				throw new KeyManagementServiceUnavailableException(res.FinalHandledResult?.HttpStatusCode);
 			}
 
-			return codeCanBeRetried && counter < 3;
+			if (res.Result.HttpStatusCode != HttpStatusCode.OK)
+			{
+				throw new KeyManagementServiceUnavailableException(res.Result.HttpStatusCode);
+			}
 		}
 	}
 }

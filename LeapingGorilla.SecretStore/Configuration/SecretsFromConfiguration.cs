@@ -9,8 +9,7 @@ namespace LeapingGorilla.SecretStore.Configuration
 {
 	///<summary>
 	/// Retrieves secret details using a name and key specified in a section of the configuration file. 
-	/// It is recommended that you create an instance of this class as a singleton or cache your 
-	/// instance for best performance. 
+	/// It is recommended that you create an instance of this class as a singleton for best performance. 
 	/// </summary>
 	/// <remarks>
 	/// Sample configuration:
@@ -23,20 +22,20 @@ namespace LeapingGorilla.SecretStore.Configuration
 	/// 
 	/// 	&lt;SecretStore&gt;
 	/// 		&lt;Secrets&gt;
-	/// 			&lt;add name="MyNameInCode" key="NameOfSecretInSecretStore" /&gt;
-	/// 			&lt;add name="MyOtherNameInCode" key="NameOfAnotherSecretInSecretStore" /&gt;
-	/// 			&lt;add name="RedisConnectionString" key="RedisConnectionString.Dev" /&gt;
-	/// 			&lt;add name="DBConnectionString" key="DBConnectionString.Dev" /&gt;
+	/// 			&lt;add key="MyNameInCode" application="YourApp" name="NameOfSecretInSecretStore" /&gt;
+	/// 			&lt;add key="MyOtherNameInCode" application="YourApp" name="NameOfAnotherSecretInSecretStore" /&gt;
+	/// 			&lt;add key="RedisConnectionString" application="Common" name="RedisConnectionString.Dev" /&gt;
+	/// 			&lt;add key="DBConnectionString" application="YourApp" name="DBConnectionString.Dev" /&gt;
 	/// 		&lt;/Secrets&gt;
 	/// 	&lt;/SecretStore&gt;
 	/// &lt;/configuration&gt;
 	/// 
-	/// We have a name and key structure so that you can use the name in code and apply config transforms 
+	/// We have a key, name and application structure so that you can use the name in code and apply config transforms 
 	/// to use different keys on different environments without a code change.
 	/// </remarks>
 	public class SecretsFromConfiguration : ISecrets
 	{
-		private readonly Dictionary<string, string> _secrets = new Dictionary<string, string>();
+		private readonly Dictionary<string, SecretElement> _secrets = new Dictionary<string, SecretElement>();
 		private readonly ISecretStore _secretStore;
 
 		/// <summary>
@@ -76,7 +75,7 @@ namespace LeapingGorilla.SecretStore.Configuration
 		/// details only for secrets in a named SecretConfigurationSection.
 		/// </summary>
 		/// <param name="secretStore">The secret store.</param>
-		/// <param name="configurationSectionName">Name of the configuration section.</param>
+		/// <param name="configurationSectionName">SecretName of the configuration section.</param>
 		public SecretsFromConfiguration(ISecretStore secretStore, string configurationSectionName)
 		{
 			_secretStore = secretStore;
@@ -93,19 +92,19 @@ namespace LeapingGorilla.SecretStore.Configuration
 
 			foreach (SecretElement secret in section.Secrets)
 			{
-				_secrets.Add(secret.Name, secret.Key);
+				_secrets.Add(secret.Key, secret);
 			}
 		}
 
-		public string Get(string name)
+		public string Get(string key)
 		{
-			string key;
-			if (!_secrets.TryGetValue(name, out key))
+			SecretElement element;
+			if (!_secrets.TryGetValue(key, out element))
 			{
-				throw new SecretNotFoundException(name);
+				throw new SecretElementNotFoundException(key);
 			}
 
-			return _secretStore.Get(key).Value;
+			return _secretStore.Get(element.Application, element.Name).Value;
 		}
 	}
 }

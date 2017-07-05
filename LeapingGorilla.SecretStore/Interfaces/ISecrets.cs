@@ -3,9 +3,10 @@
 	public interface ISecrets
 	{
 		///<summary>
-		/// Retrieves the name of a secret in the Secret Store looked up using the 
-		/// name of the secret in our configuration.
+		/// Retrieves the value of a secret from the secret store. The secret will be looked up using the
 		/// </summary>
-		string Get(string name);
+		/// <param name="key">Key of the secret to retrieve</param>
+		/// <returns>Value of the secret as retrieved from the Secret Store</returns>
+		string Get(string key);
 	}
 }

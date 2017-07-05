@@ -6,10 +6,12 @@
 	/// </summary>
 	public class SecretNotFoundException : SecretStoreException
 	{
-		public string SecretName { get; private set; }
+		public string ApplicationName { get; }
+		public string SecretName { get; }
 
-		public SecretNotFoundException(string secretName) : base($"No secret could be found with the name {secretName}. Your secret name may be case sensitive depending on your backing data store")
+		public SecretNotFoundException(string applicationName, string secretName) : base($"No secret could be found with the name {secretName} for application {applicationName}. Your secret name may be case sensitive depending on your backing data store")
 		{
+			ApplicationName = applicationName;
 			SecretName = secretName;
 		}
 	}

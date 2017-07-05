@@ -7,28 +7,37 @@ namespace LeapingGorilla.SecretStore.Configuration
 	[ExcludeFromCodeCoverage]
 	public class SecretElement : ConfigurationElement
 	{
-		private const string NameAttr = "name";
 		private const string KeyAttr = "key";
+		private const string NameAttr = "name";
+		private const string ApplicationAttr = "application";
 
-		[ConfigurationProperty(NameAttr, DefaultValue = "", IsRequired = true, IsKey = true)]
-		public string Name
-		{
-			get { return (string)this[NameAttr]; }
-			set { this[NameAttr] = value; }
-		}
-
-		[ConfigurationProperty(KeyAttr, DefaultValue = "", IsRequired = true, IsKey = false)]
+		[ConfigurationProperty(KeyAttr, DefaultValue = "", IsRequired = true, IsKey = true)]
 		public string Key
 		{
-			get { return (string)this[KeyAttr]; }
-			set { this[KeyAttr] = value; }
+			get => (string)this[KeyAttr];
+			set => this[KeyAttr] = value;
+		}
+
+		[ConfigurationProperty(NameAttr, DefaultValue = "", IsRequired = true, IsKey = false)]
+		public string Name
+		{
+			get => (string)this[NameAttr];
+			set => this[NameAttr] = value;
+		}
+
+		[ConfigurationProperty(ApplicationAttr, DefaultValue = "", IsRequired = true, IsKey = false)]
+		public string Application
+		{
+			get => (string)this[ApplicationAttr];
+			set => this[ApplicationAttr] = value;
 		}
 
 		public SecretElement() { }
 
-		public SecretElement(string name, string key)
+		public SecretElement(string name, string application, string key)
 		{
 			Name = name;
+			Application = application;
 			Key = key;
 		}
 	}

@@ -22,6 +22,7 @@ namespace LeapingGorilla.SecretStore.Aws
 
 		private static class Fields
 		{
+			public const string ApplicationName = "ApplicationName";
 			public const string SecretName = "SecretName";
 			public const string MasterKeyId = "MasterKeyId";
 			public const string ProtectedDocumentKey = "ProtectedDocumentKey";
@@ -58,11 +59,13 @@ namespace LeapingGorilla.SecretStore.Aws
 
 		public async Task CreateProtectedSecretTableAsync(string tableName)
 		{
+			await _initialise;
 			var tableDetail = new CreateTableRequest
 			{
 				TableName = tableName,
 				AttributeDefinitions = new List<AttributeDefinition>
 				{
+					new AttributeDefinition { AttributeName = Fields.ApplicationName, AttributeType = ScalarAttributeType.S },
 					new AttributeDefinition { AttributeName = Fields.SecretName, AttributeType = ScalarAttributeType.S },
 					new AttributeDefinition { AttributeName = Fields.MasterKeyId, AttributeType = ScalarAttributeType.S },
 					new AttributeDefinition { AttributeName = Fields.ProtectedDocumentKey, AttributeType = ScalarAttributeType.B },
@@ -72,7 +75,8 @@ namespace LeapingGorilla.SecretStore.Aws
 
 				KeySchema = new List<KeySchemaElement>
 				{
-					new KeySchemaElement { AttributeName = Fields.SecretName, KeyType = KeyType.HASH }
+					new KeySchemaElement { AttributeName = Fields.ApplicationName, KeyType = KeyType.HASH },
+					new KeySchemaElement { AttributeName = Fields.SecretName, KeyType = KeyType.RANGE }
 				},
 
 				ProvisionedThroughput = new ProvisionedThroughput
@@ -97,21 +101,28 @@ namespace LeapingGorilla.SecretStore.Aws
 			}
 		}
 
-		public ProtectedSecret Get(string name)
+		public ProtectedSecret Get(string applicationName, string secretName)
 		{
+			return GetAsync(applicationName, secretName).Result;
+		}
+
+		public async Task<ProtectedSecret> GetAsync(string applicationName, string secretName)
+		{
+			
 			if (_disposed)
 			{
 				throw new ObjectDisposedException("AwsDynamoProtectedSecretRepository");
 			}
 
-			var document = _table.GetItem(name);
+			var document = await _table.GetItemAsync(applicationName, secretName);
 			if (document == null)
 			{
-				throw new SecretNotFoundException(name);
+				throw new SecretNotFoundException(applicationName, secretName);
 			}
 
 			return new ProtectedSecret
 			{
+				ApplicationName = document[Fields.ApplicationName].AsString(),
 				Name = document[Fields.SecretName].AsString(),
 				MasterKeyId = document[Fields.MasterKeyId].AsString(),
 				ProtectedDocumentKey = document[Fields.ProtectedDocumentKey].AsByteArray(),
@@ -122,6 +133,11 @@ namespace LeapingGorilla.SecretStore.Aws
 
 		public void Save(ProtectedSecret secret)
 		{
+			SaveAsync(secret).Wait(15000);
+		}
+
+		public async Task SaveAsync(ProtectedSecret secret)
+		{
 			if (_disposed)
 			{
 				throw new ObjectDisposedException("AwsDynamoProtectedSecretRepository");
@@ -129,6 +145,7 @@ namespace LeapingGorilla.SecretStore.Aws
 
 			var doc = new Document
 			{
+				[Fields.ApplicationName] = secret.ApplicationName,
 				[Fields.SecretName] = secret.Name,
 				[Fields.MasterKeyId] = secret.MasterKeyId,
 				[Fields.ProtectedDocumentKey] = secret.ProtectedDocumentKey,
@@ -136,7 +153,7 @@ namespace LeapingGorilla.SecretStore.Aws
 				[Fields.InitialisationVector] = secret.InitialisationVector
 			};
 
-			_table.PutItem(doc);
+			await _table.PutItemAsync(doc);
 		}
 
 		public void Dispose()

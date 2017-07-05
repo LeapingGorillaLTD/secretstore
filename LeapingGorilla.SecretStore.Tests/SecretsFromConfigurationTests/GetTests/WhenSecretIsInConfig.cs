@@ -6,22 +6,25 @@ namespace LeapingGorilla.SecretStore.Tests.SecretsFromConfigurationTests.GetTest
 {
 	public class WhenSecretIsInConfig : WhenTestingSecretsFromConfiguration
 	{
-		private string _name;
-		private string _expectedKey;
+		private string _key;
+		private string _expectedName;
+		private string _expectedApplication;
 		private string _result;
 
 		[Given]
 		public void WeHaveHappyPath()
 		{
-			_name = "HappyPath";
-			_expectedKey = "HappyPathKey";
-			SecretStore.Get(_expectedKey).Returns(SuccessSecret);
+			_key = "HappyPath";
+			_expectedName = "HappyPathKey";
+			_expectedApplication = "HappyPathApplication";
+
+			SecretStore.Get(_expectedApplication, _expectedName).Returns(SuccessSecret);
 		}
 
 		[When]
 		public void WeGetSecret()
 		{
-			_result = SecretsConfig.Get(_name);
+			_result = SecretsConfig.Get(_key);
 		}
 
 		[Then]
@@ -33,7 +36,7 @@ namespace LeapingGorilla.SecretStore.Tests.SecretsFromConfigurationTests.GetTest
 		[Then]
 		public void SecretStoreShouldBeCalledWithExpectedKey()
 		{
-			SecretStore.Received(1).Get(_expectedKey);
+			SecretStore.Received(1).Get(_expectedApplication, _expectedName);
 		}
 	}
 }
