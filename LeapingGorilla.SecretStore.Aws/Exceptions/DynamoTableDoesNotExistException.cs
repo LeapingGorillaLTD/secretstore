@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LeapingGorilla.SecretStore.Exceptions;
+﻿using LeapingGorilla.SecretStore.Exceptions;
 
 namespace LeapingGorilla.SecretStore.Aws.Exceptions
 {

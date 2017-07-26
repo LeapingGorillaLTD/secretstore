@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
@@ -15,10 +16,9 @@ namespace LeapingGorilla.SecretStore.Aws
 	public class AwsDynamoProtectedSecretRepository : IProtectedSecretRepository, IDisposable
 	{
 		private readonly string _tableName;
-		private Table _table;
+		private readonly Lazy<Table> _table;
 		private AmazonDynamoDBClient _client;
 		private bool _disposed;
-		private Task _initialise;
 
 		private static class Fields
 		{
@@ -29,48 +29,41 @@ namespace LeapingGorilla.SecretStore.Aws
 			public const string ProtectedSecretValue = "ProtectedSecretValue";
 			public const string InitialisationVector = "InitialisationVector";
 		}
-
+		
 		public AwsDynamoProtectedSecretRepository(AmazonDynamoDBConfig config, string tableName)
 		{
-			_client = new AmazonDynamoDBClient(config);
+			_client = config == null ? new AmazonDynamoDBClient() : new AmazonDynamoDBClient(config);
 			_tableName = tableName;
-			_initialise = Task.Run(() => Init());
+			_table = new Lazy<Table>(Init, LazyThreadSafetyMode.ExecutionAndPublication);
 		}
 
-		private void Init()
+		private Table Init()
 		{
+			Table table = null;
 			var loadTableSuccess = 
 				Policy
 					.HandleResult(false)
-					.WaitAndRetry(new[]
-					{
-						TimeSpan.FromSeconds(1),
-						TimeSpan.FromSeconds(3),
-						TimeSpan.FromSeconds(6)
-					})
-					.Execute(() => Table.TryLoadTable(_client, _tableName, out _table));
+					.WaitAndRetry(3, (retryCount, ctx) => TimeSpan.FromSeconds(retryCount * 2))
+					.Execute(() => Table.TryLoadTable(_client, _tableName, out table));
 
 
 			if (!loadTableSuccess)
 			{
 				throw new DynamoTableDoesNotExistException(_tableName);
 			}
+
+			return table;
 		}
 
-		public async Task CreateProtectedSecretTableAsync(string tableName)
+		public async Task CreateProtectedSecretTableAsync()
 		{
-			await _initialise;
 			var tableDetail = new CreateTableRequest
 			{
-				TableName = tableName,
+				TableName = _tableName,
 				AttributeDefinitions = new List<AttributeDefinition>
 				{
 					new AttributeDefinition { AttributeName = Fields.ApplicationName, AttributeType = ScalarAttributeType.S },
 					new AttributeDefinition { AttributeName = Fields.SecretName, AttributeType = ScalarAttributeType.S },
-					new AttributeDefinition { AttributeName = Fields.MasterKeyId, AttributeType = ScalarAttributeType.S },
-					new AttributeDefinition { AttributeName = Fields.ProtectedDocumentKey, AttributeType = ScalarAttributeType.B },
-					new AttributeDefinition { AttributeName = Fields.ProtectedSecretValue, AttributeType = ScalarAttributeType.B },
-					new AttributeDefinition { AttributeName = Fields.InitialisationVector, AttributeType = ScalarAttributeType.B }
 				},
 
 				KeySchema = new List<KeySchemaElement>
@@ -81,23 +74,25 @@ namespace LeapingGorilla.SecretStore.Aws
 
 				ProvisionedThroughput = new ProvisionedThroughput
 				{
-					ReadCapacityUnits = 5,
+					ReadCapacityUnits = 10,
 					WriteCapacityUnits = 5
 				}
 			};
 
-			if (!Table.TryLoadTable(_client, _tableName, out _table))
+			Table table;
+			if (!Table.TryLoadTable(_client, _tableName, out table))
 			{
 				await _client.CreateTableAsync(tableDetail);
-				Policy
-					.HandleResult(false)
-					.WaitAndRetry(new[]
+				var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+
+				await Policy
+					.HandleResult<TableStatus>(ts => ts != TableStatus.ACTIVE)
+					.WaitAndRetryAsync(3, retryCount => TimeSpan.FromSeconds(retryCount * 2))
+					.ExecuteAsync(async ctx =>
 					{
-						TimeSpan.FromSeconds(1),
-						TimeSpan.FromSeconds(3),
-						TimeSpan.FromSeconds(6)
-					})
-					.Execute(() => Table.TryLoadTable(_client, _tableName, out _table));
+						var describeTableResponse = await _client.DescribeTableAsync(_tableName, ctx);
+						return describeTableResponse.Table.TableStatus;
+					}, tokenSource.Token);
 			}
 		}
 
@@ -108,13 +103,12 @@ namespace LeapingGorilla.SecretStore.Aws
 
 		public async Task<ProtectedSecret> GetAsync(string applicationName, string secretName)
 		{
-			
 			if (_disposed)
 			{
 				throw new ObjectDisposedException("AwsDynamoProtectedSecretRepository");
 			}
 
-			var document = await _table.GetItemAsync(applicationName, secretName);
+			var document = await _table.Value.GetItemAsync(applicationName, secretName);
 			if (document == null)
 			{
 				throw new SecretNotFoundException(applicationName, secretName);
@@ -153,7 +147,7 @@ namespace LeapingGorilla.SecretStore.Aws
 				[Fields.InitialisationVector] = secret.InitialisationVector
 			};
 
-			await _table.PutItemAsync(doc);
+			await _table.Value.PutItemAsync(doc);
 		}
 
 		public void Dispose()
@@ -168,9 +162,6 @@ namespace LeapingGorilla.SecretStore.Aws
 			{
 				_client?.Dispose();
 				_client = null;
-
-				_initialise?.Dispose();
-				_initialise = null;
 			}
 
 			_disposed = true;
