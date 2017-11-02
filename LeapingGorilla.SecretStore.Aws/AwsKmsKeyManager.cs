@@ -44,6 +44,16 @@ namespace LeapingGorilla.SecretStore.Aws
 			_regionEndpoint = RegionEndpoint.GetBySystemName(regionSystemName.ToLowerInvariant());
 		}
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="AwsKmsKeyManager"/> class.
+		/// </summary>
+		/// <param name="endpoint">The region endpoint i.e. eu-west-1 or us-west-2.</param>
+		/// <exception cref="ArgumentException">You must provide a Region System SecretName (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)</exception>
+		public AwsKmsKeyManager(RegionEndpoint endpoint)
+		{
+			_regionEndpoint = endpoint ?? throw new ArgumentException("You must provide a Region System SecretName (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)");
+		}
+
 		protected virtual IAmazonKeyManagementService CreateClient()
 		{
 			return new AmazonKeyManagementServiceClient(_regionEndpoint);

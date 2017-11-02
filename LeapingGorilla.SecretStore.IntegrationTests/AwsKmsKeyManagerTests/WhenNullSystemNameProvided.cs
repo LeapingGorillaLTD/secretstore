@@ -17,7 +17,7 @@ namespace LeapingGorilla.SecretStore.IntegrationTests.AwsKmsKeyManagerTests
 		{
 			try
 			{
-				_manager = new AwsKmsKeyManager(null);
+				_manager = new AwsKmsKeyManager(String.Empty);
 			}
 			catch (Exception e)
 			{

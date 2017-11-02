@@ -52,6 +52,26 @@ namespace LeapingGorilla.SecretStore
 			};
 		}
 
+		public void Save(ProtectedSecret secret)
+		{
+			if (secret == null)
+			{
+				throw new ArgumentNullException(nameof(secret));
+			}
+
+			_secrets.Save(secret);
+		}
+
+		public async Task SaveAsync(ProtectedSecret secret)
+		{
+			if (secret == null)
+			{
+				throw new ArgumentNullException(nameof(secret));
+			}
+
+			await _secrets.SaveAsync(secret);
+		}
+
 		public Secret Unprotect(ProtectedSecret protectedSecret)
 		{
 			if (protectedSecret == null)

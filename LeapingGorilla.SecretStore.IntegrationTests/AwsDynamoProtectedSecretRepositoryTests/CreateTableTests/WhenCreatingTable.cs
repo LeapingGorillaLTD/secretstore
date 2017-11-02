@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
 using FluentAssertions;
@@ -20,7 +16,7 @@ namespace LeapingGorilla.SecretStore.IntegrationTests.AwsDynamoProtectedSecretRe
 		[When]
 		public async Task TableCreatedAndSecretAdded()
 		{
-			await Repository.CreateProtectedSecretTableAsync();
+			await Repository.CreateProtectedSecretTableAsync(TableName);
 			_savedSecret = ProtectedSecretBuilder.Create().AnInstance();
 			await Repository.SaveAsync(_savedSecret);
 			_retrievedSecret = await Repository.GetAsync(_savedSecret.ApplicationName, _savedSecret.Name);

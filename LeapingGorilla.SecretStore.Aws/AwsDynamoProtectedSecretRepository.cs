@@ -15,7 +15,7 @@ namespace LeapingGorilla.SecretStore.Aws
 	///<summary>This class is thread safe and should be instantiated as a Singleton.</summary>
 	public class AwsDynamoProtectedSecretRepository : IProtectedSecretRepository, IDisposable
 	{
-		private readonly string _tableName;
+		private string _tableName;
 		private readonly Lazy<Table> _table;
 		private AmazonDynamoDBClient _client;
 		private bool _disposed;
@@ -55,8 +55,9 @@ namespace LeapingGorilla.SecretStore.Aws
 			return table;
 		}
 
-		public async Task CreateProtectedSecretTableAsync()
+		public async Task CreateProtectedSecretTableAsync(string tableName)
 		{
+			_tableName = tableName;
 			var tableDetail = new CreateTableRequest
 			{
 				TableName = _tableName,

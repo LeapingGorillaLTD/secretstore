@@ -47,5 +47,21 @@ namespace LeapingGorilla.SecretStore.Interfaces
 		/// <param name="protectedSecret">The protected secret.</param>
 		/// <returns>An unprotected secret.</returns>
 		Secret Unprotect(ProtectedSecret protectedSecret);
+
+		/// <summary>
+		/// Saves the given protected secret into the secret store. The repository
+		/// implementation determines how this save occurs and whether secrets are 
+		/// overwritten or versioned.
+		/// </summary>
+		/// <param name="secret">The secret to save.</param>
+		void Save(ProtectedSecret secret);
+
+		/// <summary>
+		/// Saves the given protected secret into the secret store. The repository
+		/// implementation determines how this save occurs and whether secrets are 
+		/// overwritten or versioned.
+		/// </summary>
+		/// <param name="secret">The secret to save.</param>
+		Task SaveAsync(ProtectedSecret secret);
 	}
 }
