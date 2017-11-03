@@ -6,8 +6,7 @@
 		public string ApplicationName { get; set; }
 		public string SecretName { get; set; }
 		public string Value { get; set; }
-
-		public Secret() { }
+		
 
 		public Secret(string applicationName, string secretName, string secretValue)
 		{

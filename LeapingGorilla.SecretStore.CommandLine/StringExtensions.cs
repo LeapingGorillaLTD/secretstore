@@ -8,11 +8,11 @@ namespace LeapingGorilla.SecretStore.CommandLine
     {
 	    public static string ToUnprotectedString(this SecureString value)
 	    {
-		    IntPtr valuePtr = IntPtr.Zero;
+			IntPtr valuePtr = IntPtr.Zero;
 		    try
 		    {
-			    valuePtr = SecureStringMarshal.SecureStringToCoTaskMemUnicode(value);
-			    return Marshal.PtrToStringUni(valuePtr);
+			    valuePtr = Marshal.SecureStringToGlobalAllocUnicode(value);
+				return Marshal.PtrToStringUni(valuePtr);
 		    }
 		    finally
 		    {

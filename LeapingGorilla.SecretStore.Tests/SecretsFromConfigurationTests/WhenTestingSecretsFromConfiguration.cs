@@ -8,7 +8,7 @@ namespace LeapingGorilla.SecretStore.Tests.SecretsFromConfigurationTests
 	public abstract class WhenTestingSecretsFromConfiguration : WhenTestingTheBehaviourOf
 	{
 		protected const string Success = "SUCCESS";
-		protected static readonly Secret SuccessSecret = new Secret { SecretName = "SuccessSecret", Value = Success };
+		protected static readonly Secret SuccessSecret = new Secret("TestSuccessSecret", "SuccessSecret", Success);
 
 		[ItemUnderTest]
 		public SecretsFromConfiguration SecretsConfig { get; set; }

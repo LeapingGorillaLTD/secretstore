@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using LeapingGorilla.SecretStore.Exceptions;
 
 namespace LeapingGorilla.SecretStore.Interfaces
@@ -31,6 +32,22 @@ namespace LeapingGorilla.SecretStore.Interfaces
 		/// <returns>The secret with the given name.</returns>
 		/// <exception cref="SecretNotFoundException">Thrown if the secret cannot be found</exception>
 		Task<Secret> GetAsync(string applicationName, string secretName);
+
+		/// <summary>
+		/// Gets all of the secrets for a single application. Returns an empty enumeration if
+		/// no secrets are found.
+		/// </summary>
+		/// <param name="applicationName">Name of the application to retrieve secrets for.</param>
+		/// <returns>Enumeration of secrets for the application. Empty enumeration if none found</returns>
+		IEnumerable<Secret> GetAllForApplication(string applicationName);
+
+		/// <summary>
+		/// Asynchronously gets all of the secrets for a single application. Returns an empty enumeration if
+		/// no secrets are found.
+		/// </summary>
+		/// <param name="applicationName">Name of the application to retrieve secrets for.</param>
+		/// <returns>Enumeration of secrets for the application. Empty enumeration if none found</returns>
+		Task<IEnumerable<Secret>> GetAllForApplicationAsync(string applicationName);
 
 		/// <summary>
 		/// Protects the given secret, this leaves the secret in a state ready for

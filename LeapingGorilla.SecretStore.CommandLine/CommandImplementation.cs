@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Security;
 using System.Threading;
-using LeapingGorilla.SecretStore.Aws;
 using LeapingGorilla.SecretStore.Interfaces;
 
 namespace LeapingGorilla.SecretStore.CommandLine
@@ -18,9 +17,9 @@ namespace LeapingGorilla.SecretStore.CommandLine
 			_secretStore = ss;
 		}
 
-	    public IEnumerable<string> GetAllSecretsForApplication(string applicationName)
+	    public IEnumerable<Secret> GetAllSecretsForApplication(string applicationName)
 	    {
-		    throw new NotImplementedException();
+		    return _secretStore.GetAllForApplication(applicationName);
 	    }
 
 	    public string GetSecret(string application, string name)
@@ -37,12 +36,13 @@ namespace LeapingGorilla.SecretStore.CommandLine
 
 	    public void CreateTable(string tableName)
 	    {
-		    using (var cts = new CancellationTokenSource(TimeSpan.FromMinutes(1)))
+		    if (_repo is ICreateProtectedSecretTable r)
 		    {
-			    ((AwsDynamoProtectedSecretRepository)_repo)
-					.CreateProtectedSecretTableAsync(tableName)
-					.Wait(cts.Token);
-		    }
+				using (var cts = new CancellationTokenSource(TimeSpan.FromMinutes(1)))
+				{
+					r.CreateProtectedSecretTableAsync(tableName).Wait(cts.Token);
+				}
+			}
 	    }
     }
 }

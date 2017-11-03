@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LeapingGorilla.SecretStore.Interfaces;
@@ -34,6 +36,17 @@ namespace LeapingGorilla.SecretStore
 			return Unprotect(await _secrets.GetAsync(applicationName, secretName));
 		}
 
+		public IEnumerable<Secret> GetAllForApplication(string applicationName)
+		{
+			return _secrets.GetAllForApplication(applicationName).Select(Unprotect).ToList();
+		}
+
+		public async Task<IEnumerable<Secret>> GetAllForApplicationAsync(string applicationName)
+		{
+			var s = await _secrets.GetAllForApplicationAsync(applicationName);
+			return s.Select(Unprotect).ToList();
+		}
+
 		public ProtectedSecret Protect(string keyName, Secret secret)
 		{
 			if (secret == null)
@@ -44,6 +57,7 @@ namespace LeapingGorilla.SecretStore
 			var encryptedSecret = _encryptionManager.Encrypt(keyName, SecretEncoding.GetBytes(secret.Value));
 			return new ProtectedSecret
 			{
+				ApplicationName = secret.ApplicationName,
 				MasterKeyId = keyName,
 				InitialisationVector = encryptedSecret.InitialisationVector,
 				Name = secret.SecretName,
@@ -80,11 +94,8 @@ namespace LeapingGorilla.SecretStore
 			}
 
 			var rawValue = _encryptionManager.Decrypt(protectedSecret.MasterKeyId, protectedSecret.ProtectedDocumentKey, protectedSecret.InitialisationVector, protectedSecret.ProtectedSecretValue);
-			return new Secret
-			{
-				SecretName = protectedSecret.Name,
-				Value = SecretEncoding.GetString(rawValue)
-			};
+
+			return new Secret(protectedSecret.ApplicationName, protectedSecret.Name, SecretEncoding.GetString(rawValue));
 		}
 	}
 }

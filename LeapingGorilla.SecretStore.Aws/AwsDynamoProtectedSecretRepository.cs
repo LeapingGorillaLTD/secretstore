@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
@@ -13,14 +14,14 @@ using Polly;
 namespace LeapingGorilla.SecretStore.Aws
 {
 	///<summary>This class is thread safe and should be instantiated as a Singleton.</summary>
-	public class AwsDynamoProtectedSecretRepository : IProtectedSecretRepository, IDisposable
+	public class AwsDynamoProtectedSecretRepository : IProtectedSecretRepository, ICreateProtectedSecretTable, IDisposable
 	{
 		private string _tableName;
 		private readonly Lazy<Table> _table;
 		private AmazonDynamoDBClient _client;
 		private bool _disposed;
 
-		private static class Fields
+		internal static class Fields
 		{
 			public const string ApplicationName = "ApplicationName";
 			public const string SecretName = "SecretName";
@@ -115,15 +116,33 @@ namespace LeapingGorilla.SecretStore.Aws
 				throw new SecretNotFoundException(applicationName, secretName);
 			}
 
-			return new ProtectedSecret
+			return document.ToProtectedSecret();
+		}
+
+		public IEnumerable<ProtectedSecret> GetAllForApplication(string applicationName)
+		{
+			return GetAllForApplicationAsync(applicationName).Result;
+		}
+		
+		public async Task<IEnumerable<ProtectedSecret>> GetAllForApplicationAsync(string applicationName)
+		{
+			if (_disposed)
 			{
-				ApplicationName = document[Fields.ApplicationName].AsString(),
-				Name = document[Fields.SecretName].AsString(),
-				MasterKeyId = document[Fields.MasterKeyId].AsString(),
-				ProtectedDocumentKey = document[Fields.ProtectedDocumentKey].AsByteArray(),
-				ProtectedSecretValue = document[Fields.ProtectedSecretValue].AsByteArray(),
-				InitialisationVector = document[Fields.InitialisationVector].AsByteArray()
-			};
+				throw new ObjectDisposedException("AwsDynamoProtectedSecretRepository");
+			}
+
+			var filter = new ScanFilter();
+			filter.AddCondition(Fields.ApplicationName, ScanOperator.Equal, applicationName);
+			
+			var search = _table.Value.Scan(filter);
+			var bg = await search.GetRemainingAsync();
+
+			if (bg == null || bg.Count == 0)
+			{
+				return Enumerable.Empty<ProtectedSecret>();
+			}
+
+			return bg.Select(AwsExtensions.ToProtectedSecret).ToList();
 		}
 
 		public void Save(ProtectedSecret secret)
