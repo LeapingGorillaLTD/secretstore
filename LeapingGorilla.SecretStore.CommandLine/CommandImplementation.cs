@@ -8,14 +8,9 @@ namespace LeapingGorilla.SecretStore.CommandLine
 {
     public class CommandImplementation
     {
-	    private readonly ISecretStore _secretStore;
-	    private readonly IProtectedSecretRepository _repo;
-
-		public CommandImplementation(ISecretStore ss, IProtectedSecretRepository repo)
-		{
-			_repo = repo;
-			_secretStore = ss;
-		}
+	    private ISecretStore _secretStore;
+	    private IProtectedSecretRepository _repo;
+		
 
 	    public IEnumerable<Secret> GetAllSecretsForApplication(string applicationName)
 	    {
@@ -43,6 +38,12 @@ namespace LeapingGorilla.SecretStore.CommandLine
 					r.CreateProtectedSecretTableAsync(tableName).Wait(cts.Token);
 				}
 			}
+	    }
+
+	    public void SetDependencies(ISecretStore ss, IProtectedSecretRepository repo)
+	    {
+		    _repo = repo;
+			_secretStore = ss;
 	    }
     }
 }

@@ -12,18 +12,7 @@ namespace LeapingGorilla.SecretStore.CommandLine
 	{
 		static void Main(string[] args)
 		{
-			var region = RegionEndpoint.EUWest1;
-			var km = new AwsKmsKeyManager(region);
-			var config = new AmazonDynamoDBConfig
-			{
-				RegionEndpoint = region
-			};
-
-			var repo = new AwsDynamoProtectedSecretRepository(config, CommandLineInterface.DefaultTableName);
-			var em = new EncryptionManager(km);
-			var ss = new SecretStore(repo, em);
-
-			var imp = new CommandImplementation(ss, repo);
+			var imp = new CommandImplementation();
 
 			var c = new CommandLineInterface();
 			c.Configure(imp);
@@ -38,6 +27,21 @@ namespace LeapingGorilla.SecretStore.CommandLine
 
 		private readonly CommandLineApplication cml = new CommandLineApplication();
 
+		private void SetDependencies(CommandImplementation imp, string tableName = CommandLineInterface.DefaultTableName)
+		{
+			var region = RegionEndpoint.EUWest1;
+			var km = new AwsKmsKeyManager(region);
+			var config = new AmazonDynamoDBConfig
+			{
+				RegionEndpoint = region
+			};
+
+			var repo = new AwsDynamoProtectedSecretRepository(config, tableName);
+			var em = new EncryptionManager(km);
+			var ss = new SecretStore(repo, em);
+
+			imp.SetDependencies(ss, repo);
+		}
 
 		public void Configure(CommandImplementation imp)
 		{
@@ -49,6 +53,7 @@ namespace LeapingGorilla.SecretStore.CommandLine
 					cmd.ExtendedHelpText = $"Create a new Secret Store table with the name specified. Creates a table with the name {DefaultTableName} if none provided.";
 					cmd.OnExecute(() =>
 					{
+						SetDependencies(imp);
 						var table = String.IsNullOrWhiteSpace(createTable.Value)
 									? DefaultTableName
 									: createTable.Value;
@@ -67,6 +72,7 @@ namespace LeapingGorilla.SecretStore.CommandLine
 					var key = cmd.Argument("key", "The key to use to protect the secret.");
 					var application = cmd.Argument("application", "The application that the secret belongs to.");
 					var name = cmd.Argument("name", "The name of the secret to be created.");
+					var tableName = cmd.Argument("tableName", "The name of the table we will add the secret to");
 
 					cmd.HelpOption(HelpPattern);
 					cmd.ExtendedHelpText = "Add a new secret into the Secret Store for the given application, name and using the specified key";
@@ -91,6 +97,15 @@ namespace LeapingGorilla.SecretStore.CommandLine
 							Console.WriteLine("You must provide the name of the secret");
 							Console.WriteLine("secrets add arn:mykey MyApplication NameOfSecret [table name]");
 							return -3;
+						}
+
+						if (tableName.HasValue())
+						{
+							SetDependencies(imp, tableName.Value);
+						}
+						else
+						{
+							SetDependencies(imp);
 						}
 
 						Console.WriteLine("Enter secret: ");
@@ -126,7 +141,7 @@ namespace LeapingGorilla.SecretStore.CommandLine
 							return -2;
 						}
 
-
+						SetDependencies(imp);
 						if (name.HasValue())
 						{
 							var pw = imp.GetSecret(application.Value, name.Value);
