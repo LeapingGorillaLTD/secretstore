@@ -19,7 +19,7 @@ namespace LeapingGorilla.SecretStore.Tests.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -61,7 +61,8 @@ namespace LeapingGorilla.SecretStore.Tests.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;RSAKeyValue&gt;&lt;Modulus&gt;yFjSLZrefqfTLlj6LDH0U8OGu+s8TxPjs1qJauCaD6KSkNXORZtZ6+0McH8C/faubUkfdW3SQEixd9vuAabC0P/25ba/wbnrXCfcc5xMgOLD1E/SOo0hn5AkmYTsj2lqpmoAal8mUCWsPcAD8ibUaCdhpbkoDEBP0iNCDmZupL8=&lt;/Modulus&gt;&lt;Exponent&gt;AQAB&lt;/Exponent&gt;&lt;P&gt;6T22vXZkQ2bCdUzji47ZruiBJ8XEAfUdJQ/tR+TOZZgaisEFDRyt+Tt22Vtrk67W+5IgUl6wZsPq7An0rggwBw==&lt;/P&gt;&lt;Q&gt;2+VsRSxSWQihSp8j6fFBEc7Bnl6GlTYj0b0Yqyk6nGTu8f5P/QmAziGijWj/iwn1JgSBCBw8R+7tRXx0pq1HiQ==&lt;/Q&gt;&lt;DP&gt;wk50X3Ay5OfFlj0Az3GpLYpqlnyt5seRiR+0mBEoVQCbE/7rO1oqIRiF0VvUygp89MVugdB6epI6sns0yIrvnw==&lt; [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to &lt;RSAKeyValue&gt;
+        ///	&lt;Modulus&gt;rJpxBNWDUDK9ilSyOcxzCmcBHMLKxPJAb0TK+odiU4x1nJWaUz6RrCj//zyFLnoNl7Xl2fF1FgIZOb8x0x8ny95VDRh5TX10g1uztmg6dsMR0e2Uew1K3ZbwgAKFsGVg1FynYSVQbueIGFkDaDNLHJcGxw8mogBJ9YrFj/6OExXPUFlYRaFCvHmpUSRlGT5Oq01/IaaTiAF6FsIxoupwQdEza0P/ihv60ZxCx8gAwa1tJ/tY/+RdBP+4I5kz0twEPY9Qd2wsPLHpquyG/COWHZNGet2BWd1x+ALOCSQfjJE491Cn+S1BXKGZMD2tz9raGEbiGBkLJLW0EpT5Jhx4FoECt0bOOu+viRTZ60tk+P8n60DnC2KlnomFmagKdNi43fTc+rLzE9sMnlXhMFtW9nKTJ8epDb0mCi5Y603dfwdQqK8xbwmBAE3srpwdJFj1og9f56ADGtGZirwTSuPbnSXmhQIJA1Vb85U7ZZv [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string TestRsaKey {
             get {

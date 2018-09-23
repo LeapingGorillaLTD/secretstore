@@ -128,6 +128,7 @@ namespace LeapingGorilla.SecretStore.CommandLine
 				{
 					var application = cmd.Argument("application", "The application that the secret belongs to.");
 					var name = cmd.Argument("[name]", "The name of the secret to be created. (OPTIONAL - if ommitted all secrets for the application will be retrieved");
+					var tableName = cmd.Argument("[tableName]", "The name of the table containing the secret. (OPTIONAL - if ommitted the default table will be used");
 
 					cmd.HelpOption(HelpPattern);
 					cmd.ExtendedHelpText = "Add a new secret into the Secret Store for the given application, name and using the specified key";
@@ -141,7 +142,16 @@ namespace LeapingGorilla.SecretStore.CommandLine
 							return -2;
 						}
 
-						SetDependencies(imp);
+						if (tableName.HasValue())
+						{
+							SetDependencies(imp, tableName.Value);
+						}
+						else
+						{
+							SetDependencies(imp);
+						}
+
+						
 						if (name.HasValue())
 						{
 							var pw = imp.GetSecret(application.Value, name.Value);

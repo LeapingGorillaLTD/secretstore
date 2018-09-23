@@ -100,7 +100,18 @@ namespace LeapingGorilla.SecretStore.Aws
 
 		public ProtectedSecret Get(string applicationName, string secretName)
 		{
-			return GetAsync(applicationName, secretName).Result;
+			if (_disposed)
+			{
+				throw new ObjectDisposedException("AwsDynamoProtectedSecretRepository");
+			}
+
+			var document = _table.Value.GetItem(applicationName, secretName);
+			if (document == null)
+			{
+				throw new SecretNotFoundException(applicationName, secretName);
+			}
+
+			return document.ToProtectedSecret();
 		}
 
 		public async Task<ProtectedSecret> GetAsync(string applicationName, string secretName)
@@ -110,7 +121,7 @@ namespace LeapingGorilla.SecretStore.Aws
 				throw new ObjectDisposedException("AwsDynamoProtectedSecretRepository");
 			}
 
-			var document = await _table.Value.GetItemAsync(applicationName, secretName);
+			var document = await _table.Value.GetItemAsync(applicationName, secretName).ConfigureAwait(false);
 			if (document == null)
 			{
 				throw new SecretNotFoundException(applicationName, secretName);
@@ -121,7 +132,23 @@ namespace LeapingGorilla.SecretStore.Aws
 
 		public IEnumerable<ProtectedSecret> GetAllForApplication(string applicationName)
 		{
-			return GetAllForApplicationAsync(applicationName).Result;
+			if (_disposed)
+			{
+				throw new ObjectDisposedException("AwsDynamoProtectedSecretRepository");
+			}
+
+			var filter = new ScanFilter();
+			filter.AddCondition(Fields.ApplicationName, ScanOperator.Equal, applicationName);
+
+			var search = _table.Value.Scan(filter);
+			var bg = search.GetRemaining();
+
+			if (bg == null || bg.Count == 0)
+			{
+				return Enumerable.Empty<ProtectedSecret>();
+			}
+
+			return bg.Select(AwsExtensions.ToProtectedSecret).ToList();
 		}
 		
 		public async Task<IEnumerable<ProtectedSecret>> GetAllForApplicationAsync(string applicationName)
@@ -135,7 +162,7 @@ namespace LeapingGorilla.SecretStore.Aws
 			filter.AddCondition(Fields.ApplicationName, ScanOperator.Equal, applicationName);
 			
 			var search = _table.Value.Scan(filter);
-			var bg = await search.GetRemainingAsync();
+			var bg = await search.GetRemainingAsync().ConfigureAwait(false);
 
 			if (bg == null || bg.Count == 0)
 			{
@@ -147,7 +174,22 @@ namespace LeapingGorilla.SecretStore.Aws
 
 		public void Save(ProtectedSecret secret)
 		{
-			SaveAsync(secret).Wait(15000);
+			if (_disposed)
+			{
+				throw new ObjectDisposedException("AwsDynamoProtectedSecretRepository");
+			}
+
+			var doc = new Document
+			{
+				[Fields.ApplicationName] = secret.ApplicationName,
+				[Fields.SecretName] = secret.Name,
+				[Fields.MasterKeyId] = secret.MasterKeyId,
+				[Fields.ProtectedDocumentKey] = secret.ProtectedDocumentKey,
+				[Fields.ProtectedSecretValue] = secret.ProtectedSecretValue,
+				[Fields.InitialisationVector] = secret.InitialisationVector
+			};
+
+			_table.Value.PutItem(doc);
 		}
 
 		public async Task SaveAsync(ProtectedSecret secret)
@@ -167,7 +209,7 @@ namespace LeapingGorilla.SecretStore.Aws
 				[Fields.InitialisationVector] = secret.InitialisationVector
 			};
 
-			await _table.Value.PutItemAsync(doc);
+			await _table.Value.PutItemAsync(doc).ConfigureAwait(false);
 		}
 
 		public void Dispose()

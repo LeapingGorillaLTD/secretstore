@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Web.Configuration;
 using LeapingGorilla.SecretStore.Exceptions;
 using LeapingGorilla.SecretStore.Interfaces;
 
@@ -39,6 +40,20 @@ namespace LeapingGorilla.SecretStore.Configuration
 		private readonly ISecretStore _secretStore;
 
 		/// <summary>
+		/// Initializes a new instance of the <see cref="SecretsFromConfiguration" /> class with
+		/// default behaviour. This constructor assumes that only a single SecretConfigurationSection
+		/// is specified in the application config.
+		/// </summary>
+		/// <param name="config">The configuration we will read the secrets data from.</param>
+		/// <param name="secretStore">The secret store.</param>
+		/// <exception cref="System.Configuration.ConfigurationErrorsException"></exception>
+		public SecretsFromConfiguration(ISecretStore secretStore, System.Configuration.Configuration config)
+		{
+			_secretStore = secretStore;
+			LoadConfig(config);
+		}
+
+		/// <summary>
 		/// Initializes a new instance of the <see cref="SecretsFromConfiguration"/> class with 
 		/// default behaviour. This constructor assumes that only a single SecretConfigurationSection
 		/// is specified in the application config.
@@ -47,9 +62,34 @@ namespace LeapingGorilla.SecretStore.Configuration
 		/// <exception cref="System.Configuration.ConfigurationErrorsException"></exception>
 		public SecretsFromConfiguration(ISecretStore secretStore)
 		{
+			System.Configuration.Configuration config;
 			_secretStore = secretStore;
 
-			var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+			if (System.Web.HttpContext.Current != null)
+			{
+				config = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration("~/");
+			}
+			else
+			{
+				config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+			}
+			LoadConfig(config);
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="SecretsFromConfiguration"/> class containing 
+		/// details only for secrets in a named SecretConfigurationSection.
+		/// </summary>
+		/// <param name="secretStore">The secret store.</param>
+		/// <param name="configurationSectionName">SecretName of the configuration section.</param>
+		public SecretsFromConfiguration(ISecretStore secretStore, string configurationSectionName)
+		{
+			_secretStore = secretStore;
+			LoadSecretDetailsFromConfigurationSection(configurationSectionName);
+		}
+
+		private void LoadConfig(System.Configuration.Configuration config)
+		{
 			var sectionNames = new HashSet<string>();
 
 			foreach (var sec in config.Sections.OfType<SecretConfigurationSection>())
@@ -68,18 +108,6 @@ namespace LeapingGorilla.SecretStore.Configuration
 			}
 
 			LoadSecretDetailsFromConfigurationSection(sectionNames.Single());
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="SecretsFromConfiguration"/> class containing 
-		/// details only for secrets in a named SecretConfigurationSection.
-		/// </summary>
-		/// <param name="secretStore">The secret store.</param>
-		/// <param name="configurationSectionName">SecretName of the configuration section.</param>
-		public SecretsFromConfiguration(ISecretStore secretStore, string configurationSectionName)
-		{
-			_secretStore = secretStore;
-			LoadSecretDetailsFromConfigurationSection(configurationSectionName);
 		}
 
 		private void LoadSecretDetailsFromConfigurationSection(string configurationSectionName)
