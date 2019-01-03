@@ -29,7 +29,7 @@ namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests.UnexpectedRespo
 				HttpStatusCode = HttpStatusCode.InternalServerError
 			};
 
-			KmsService.Encrypt(Arg.Any<EncryptRequest>())
+			KmsService.EncryptAsync(Arg.Any<EncryptRequest>())
 				.Returns(_result);
 		}
 
@@ -67,7 +67,7 @@ namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests.UnexpectedRespo
 		[Then]
 		public void ShouldRetryExpectedNumberOfTimes()
 		{
-			KmsService.Received(3).Encrypt(Arg.Any<EncryptRequest>());
+			KmsService.Received(3).EncryptAsync(Arg.Any<EncryptRequest>());
 		}
 	}
 }

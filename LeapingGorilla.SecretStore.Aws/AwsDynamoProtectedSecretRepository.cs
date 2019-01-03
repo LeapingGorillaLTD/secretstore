@@ -81,8 +81,8 @@ namespace LeapingGorilla.SecretStore.Aws
 				}
 			};
 
-			Table table;
-			if (!Table.TryLoadTable(_client, _tableName, out table))
+			// ReSharper disable once UnusedVariable - Used to test for existence
+			if (!Table.TryLoadTable(_client, _tableName, out var table))
 			{
 				await _client.CreateTableAsync(tableDetail);
 				var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
@@ -100,18 +100,9 @@ namespace LeapingGorilla.SecretStore.Aws
 
 		public ProtectedSecret Get(string applicationName, string secretName)
 		{
-			if (_disposed)
-			{
-				throw new ObjectDisposedException("AwsDynamoProtectedSecretRepository");
-			}
-
-			var document = _table.Value.GetItem(applicationName, secretName);
-			if (document == null)
-			{
-				throw new SecretNotFoundException(applicationName, secretName);
-			}
-
-			return document.ToProtectedSecret();
+			var t = GetAsync(applicationName, secretName);
+			t.ConfigureAwait(false);
+			return t.GetAwaiter().GetResult();
 		}
 
 		public async Task<ProtectedSecret> GetAsync(string applicationName, string secretName)
@@ -132,23 +123,9 @@ namespace LeapingGorilla.SecretStore.Aws
 
 		public IEnumerable<ProtectedSecret> GetAllForApplication(string applicationName)
 		{
-			if (_disposed)
-			{
-				throw new ObjectDisposedException("AwsDynamoProtectedSecretRepository");
-			}
-
-			var filter = new ScanFilter();
-			filter.AddCondition(Fields.ApplicationName, ScanOperator.Equal, applicationName);
-
-			var search = _table.Value.Scan(filter);
-			var bg = search.GetRemaining();
-
-			if (bg == null || bg.Count == 0)
-			{
-				return Enumerable.Empty<ProtectedSecret>();
-			}
-
-			return bg.Select(AwsExtensions.ToProtectedSecret).ToList();
+			var t = GetAllForApplicationAsync(applicationName);
+			t.ConfigureAwait(false);
+			return t.GetAwaiter().GetResult();
 		}
 		
 		public async Task<IEnumerable<ProtectedSecret>> GetAllForApplicationAsync(string applicationName)
@@ -174,22 +151,9 @@ namespace LeapingGorilla.SecretStore.Aws
 
 		public void Save(ProtectedSecret secret)
 		{
-			if (_disposed)
-			{
-				throw new ObjectDisposedException("AwsDynamoProtectedSecretRepository");
-			}
-
-			var doc = new Document
-			{
-				[Fields.ApplicationName] = secret.ApplicationName,
-				[Fields.SecretName] = secret.Name,
-				[Fields.MasterKeyId] = secret.MasterKeyId,
-				[Fields.ProtectedDocumentKey] = secret.ProtectedDocumentKey,
-				[Fields.ProtectedSecretValue] = secret.ProtectedSecretValue,
-				[Fields.InitialisationVector] = secret.InitialisationVector
-			};
-
-			_table.Value.PutItem(doc);
+			var t = SaveAsync(secret);
+			t.ConfigureAwait(false);
+			t.GetAwaiter().GetResult();
 		}
 
 		public async Task SaveAsync(ProtectedSecret secret)

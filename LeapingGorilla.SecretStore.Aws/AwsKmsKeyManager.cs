@@ -101,7 +101,9 @@ namespace LeapingGorilla.SecretStore.Aws
 						Plaintext = msPlainText
 					};
 
-					return client.Encrypt(req);
+					var t = client.EncryptAsync(req);
+					t.ConfigureAwait(false);
+					return t.GetAwaiter().GetResult();
 				}
 			});
 
@@ -134,7 +136,9 @@ namespace LeapingGorilla.SecretStore.Aws
 						KeySpec = DataKeySpec.AES_128
 					};
 
-					return client.GenerateDataKey(req);
+					var t = client.GenerateDataKeyAsync(req);
+					t.ConfigureAwait(false);
+					return t.GetAwaiter().GetResult();
 				}
 			});
 
@@ -186,7 +190,9 @@ namespace LeapingGorilla.SecretStore.Aws
 						CiphertextBlob = msData
 					};
 
-					return client.Decrypt(req);
+					var t = client.DecryptAsync(req);
+					t.ConfigureAwait(false);
+					return t.GetAwaiter().GetResult();
 				}
 			});
 

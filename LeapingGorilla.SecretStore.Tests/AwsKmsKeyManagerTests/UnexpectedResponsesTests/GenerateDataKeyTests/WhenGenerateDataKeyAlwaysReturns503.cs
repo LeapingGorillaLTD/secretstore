@@ -21,7 +21,7 @@ namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests.UnexpectedRespo
 				HttpStatusCode = HttpStatusCode.ServiceUnavailable
 			};
 
-			KmsService.GenerateDataKey(Arg.Any<GenerateDataKeyRequest>()).Returns(_result);
+			KmsService.GenerateDataKeyAsync(Arg.Any<GenerateDataKeyRequest>()).Returns(_result);
 		}
 
 		[When]
@@ -58,7 +58,7 @@ namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests.UnexpectedRespo
 		[Then]
 		public void ShouldRetryExpectedNumberOfTimes()
 		{
-			KmsService.Received(3).GenerateDataKey(Arg.Any<GenerateDataKeyRequest>());
+			KmsService.Received(3).GenerateDataKeyAsync(Arg.Any<GenerateDataKeyRequest>());
 		}
 	}
 }

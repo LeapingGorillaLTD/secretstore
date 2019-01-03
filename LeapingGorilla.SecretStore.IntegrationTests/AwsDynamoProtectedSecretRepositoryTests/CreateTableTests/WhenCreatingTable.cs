@@ -2,6 +2,7 @@
 using Amazon;
 using Amazon.DynamoDBv2;
 using FluentAssertions;
+using FluentAssertions.Extensions;
 using LeapingGorilla.SecretStore.Tests.Builders;
 using LeapingGorilla.Testing.Attributes;
 using NUnit.Framework;
@@ -31,14 +32,14 @@ namespace LeapingGorilla.SecretStore.IntegrationTests.AwsDynamoProtectedSecretRe
 		[Then]
 		public void RetrievedSecretShouldBeAsExpected()
 		{
-			_retrievedSecret.ShouldBeEquivalentTo(_savedSecret);
+			_retrievedSecret.Should().BeEquivalentTo(_savedSecret);
 		}
 
 		[OneTimeTearDown]
 		public void DeleteTable()
 		{
 			var client = new AmazonDynamoDBClient(RegionEndpoint.EUWest1);
-			client.DeleteTable(TableName);
+			client.DeleteTableAsync(TableName).Wait(30.Seconds());
 		}
 	}
 }

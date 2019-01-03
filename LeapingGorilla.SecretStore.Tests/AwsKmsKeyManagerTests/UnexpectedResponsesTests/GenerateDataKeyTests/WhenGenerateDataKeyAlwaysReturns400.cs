@@ -20,7 +20,7 @@ namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests.UnexpectedRespo
 				HttpStatusCode = HttpStatusCode.BadRequest
 			};
 
-			KmsService.GenerateDataKey(Arg.Any<GenerateDataKeyRequest>()).Returns(_result);
+			KmsService.GenerateDataKeyAsync(Arg.Any<GenerateDataKeyRequest>()).Returns(_result);
 		}
 
 		[When]
@@ -57,7 +57,7 @@ namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests.UnexpectedRespo
 		[Then]
 		public void ShouldNotRetry()
 		{
-			KmsService.Received(1).GenerateDataKey(Arg.Any<GenerateDataKeyRequest>());
+			KmsService.Received(1).GenerateDataKeyAsync(Arg.Any<GenerateDataKeyRequest>());
 		}
 	}
 }

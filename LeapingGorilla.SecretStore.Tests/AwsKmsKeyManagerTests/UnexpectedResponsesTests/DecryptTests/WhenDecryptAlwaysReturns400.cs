@@ -28,7 +28,7 @@ namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests.UnexpectedRespo
 				HttpStatusCode = HttpStatusCode.BadRequest
 			};
 
-			KmsService.Decrypt(Arg.Any<DecryptRequest>())
+			KmsService.DecryptAsync(Arg.Any<DecryptRequest>())
 				.Returns(_result);
 		}
 
@@ -65,7 +65,7 @@ namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests.UnexpectedRespo
 		[Then]
 		public void ShouldNotRetry()
 		{
-			KmsService.Received(1).Decrypt(Arg.Any<DecryptRequest>());
+			KmsService.Received(1).DecryptAsync(Arg.Any<DecryptRequest>());
 		}
 	}
 }

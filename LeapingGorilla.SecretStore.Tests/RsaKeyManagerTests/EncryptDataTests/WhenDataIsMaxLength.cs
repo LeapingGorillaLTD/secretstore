@@ -26,7 +26,7 @@ namespace LeapingGorilla.SecretStore.Tests.RsaKeyManagerTests.EncryptDataTests
 			RSAParameters privateKey;
 			using (var rsa = new RSACryptoServiceProvider())
 			{
-				rsa.FromXmlString(Resources.TestRsaKey);
+				rsa.ImportParameters(PrivateTestKey);
 				publicKey = rsa.ExportParameters(false);
 				privateKey = rsa.ExportParameters(true);
 			}
