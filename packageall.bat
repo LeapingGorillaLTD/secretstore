@@ -4,4 +4,3 @@ mkdir NuGet
 del /F /Q NuGet\*.*
 copy LeapingGorilla.SecretStore.Aws\NuGet\*.* NuGet
 copy LeapingGorilla.SecretStore\NuGet\*.* NuGet
-nuget push NuGet\LeapingGorilla.SecretStore.*.nupkg -Source http://nuget.lg f091b6fd-55b3-445b-8b6c-387987bf1f0c
