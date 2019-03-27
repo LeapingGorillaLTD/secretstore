@@ -33,12 +33,12 @@ namespace LeapingGorilla.SecretStore.Aws
 		/// Initializes a new instance of the <see cref="AwsKmsKeyManager"/> class.
 		/// </summary>
 		/// <param name="regionSystemName">Name of the region system i.e. eu-west-1 or us-west-2.</param>
-		/// <exception cref="System.ArgumentException">You must provide a Region System SecretName (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)</exception>
+		/// <exception cref="System.ArgumentException">You must provide a Region System Name (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)</exception>
 		public AwsKmsKeyManager(string regionSystemName)
 		{
 			if (String.IsNullOrWhiteSpace(regionSystemName))
 			{
-				throw new ArgumentException("You must provide a Region System SecretName (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)");
+				throw new ArgumentException("You must provide a Region System Name (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)");
 			}
 
 			_regionEndpoint = RegionEndpoint.GetBySystemName(regionSystemName.ToLowerInvariant());
@@ -48,10 +48,10 @@ namespace LeapingGorilla.SecretStore.Aws
 		/// Initializes a new instance of the <see cref="AwsKmsKeyManager"/> class.
 		/// </summary>
 		/// <param name="endpoint">The region endpoint i.e. eu-west-1 or us-west-2.</param>
-		/// <exception cref="ArgumentException">You must provide a Region System SecretName (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)</exception>
+		/// <exception cref="ArgumentException">You must provide a Region System Name (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)</exception>
 		public AwsKmsKeyManager(RegionEndpoint endpoint)
 		{
-			_regionEndpoint = endpoint ?? throw new ArgumentException("You must provide a Region System SecretName (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)");
+			_regionEndpoint = endpoint ?? throw new ArgumentException("You must provide a Region System Name (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)");
 		}
 
 		protected virtual IAmazonKeyManagementService CreateClient()

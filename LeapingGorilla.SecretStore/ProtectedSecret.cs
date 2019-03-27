@@ -6,10 +6,10 @@
 	/// </summary>
 	public class ProtectedSecret
 	{
-		///<summary>SecretName of the application that the secret belongs to</summary>
+		///<summary>Name of the application that the secret belongs to</summary>
 		public string ApplicationName { get; set; }
 		
-		///<summary>SecretName of the secret</summary>
+		///<summary>Name of the secret</summary>
 		public string Name { get; set; }
 
 		///<summary>ID of the master key used to protect the document key protecting this secret</summary>
