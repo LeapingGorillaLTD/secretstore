@@ -12,9 +12,9 @@ namespace LeapingGorilla.SecretStore.CommandLine
 		{
 			var imp = new CommandImplementation();
 			Parser.Default
-				.ParseArguments<CreateTableOptions, AddSecretOptions, GetSecretOptions, GetAllSecretsOption>(args)
+				.ParseArguments<CreateTableOptions, SetSecretOptions, GetSecretOptions, GetAllSecretsOption>(args)
 					.WithParsed<CreateTableOptions>(opts => imp.CreateTable(opts.TableName))
-					.WithParsed<AddSecretOptions>(opts =>
+					.WithParsed<SetSecretOptions>(opts =>
 					{
 						Console.WriteLine("Enter secret: ");
 						var pw = GetSecretFromConsole();

@@ -2,11 +2,11 @@
 
 namespace LeapingGorilla.SecretStore.CommandLine.Options
 {
-	[Verb("add", HelpText = "Add a new secret into a Secret Store")]
-	public class AddSecretOptions
+	[Verb("set", HelpText = "Add or update a secret in a Secret Store")]
+	public class SetSecretOptions
 	{
 		[Option('t', "tableName", Required = true,
-			HelpText = "Name of the Dynamo table that we are adding the secret to")]
+			HelpText = "Name of the Dynamo table containing the secret")]
 		public string TableName { get; set; }
 		
 		[Option('a', "applicationName", Required = true,
