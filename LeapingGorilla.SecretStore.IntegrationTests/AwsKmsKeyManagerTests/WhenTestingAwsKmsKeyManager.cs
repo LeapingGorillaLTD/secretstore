@@ -1,4 +1,5 @@
-﻿using LeapingGorilla.SecretStore.Aws;
+﻿using System.IO;
+using LeapingGorilla.SecretStore.Aws;
 using LeapingGorilla.Testing;
 using LeapingGorilla.Testing.Attributes;
 
@@ -6,7 +7,7 @@ namespace LeapingGorilla.SecretStore.IntegrationTests.AwsKmsKeyManagerTests
 {
 	public abstract class WhenTestingAwsKmsKeyManager : WhenTestingTheBehaviourOf
 	{
-		public const string DevelopmentKeyId = "arn:aws:kms:eu-west-1:147007673657:key/36e5afca-a537-4cad-8b84-442e195c5d19";
+		public string DevelopmentKeyId = File.ReadAllText("KmsTestKeyArn.txt");
 
 		[ItemUnderTest]
 		public AwsKmsKeyManager Manager { get; set; } 

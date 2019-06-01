@@ -13,12 +13,14 @@ using Polly;
 
 namespace LeapingGorilla.SecretStore.Aws
 {
-	public class AwsKmsKeyManager : IKeyManager
+	public class AwsKmsKeyManager : IKeyManager, IDisposable
 	{
 		public const int MaxEncryptPayloadSize = 4096;
 		public const int MaxDecryptPayloadSize = 6144;
 
-		private readonly RegionEndpoint _regionEndpoint;
+		private IAmazonKeyManagementService _client;
+
+		private bool _disposed;
 
 		private static readonly Policy<AmazonWebServiceResponse> RetryPolicy =
 			Policy
@@ -41,7 +43,17 @@ namespace LeapingGorilla.SecretStore.Aws
 				throw new ArgumentException("You must provide a Region System Name (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)");
 			}
 
-			_regionEndpoint = RegionEndpoint.GetBySystemName(regionSystemName.ToLowerInvariant());
+			var regionEndpoint = RegionEndpoint.GetBySystemName(regionSystemName.ToLowerInvariant());
+			_client = new AmazonKeyManagementServiceClient(regionEndpoint);
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="AwsKmsKeyManager"/> class.
+		/// </summary>
+		/// <param name="client">The KMS client instance to use.</param>
+		public AwsKmsKeyManager(IAmazonKeyManagementService client)
+		{
+			_client = client;
 		}
 
 		/// <summary>
@@ -51,12 +63,8 @@ namespace LeapingGorilla.SecretStore.Aws
 		/// <exception cref="ArgumentException">You must provide a Region System Name (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)</exception>
 		public AwsKmsKeyManager(RegionEndpoint endpoint)
 		{
-			_regionEndpoint = endpoint ?? throw new ArgumentException("You must provide a Region System Name (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)");
-		}
-
-		protected virtual IAmazonKeyManagementService CreateClient()
-		{
-			return new AmazonKeyManagementServiceClient(_regionEndpoint);
+			var regionEndpoint = endpoint ?? throw new ArgumentException("You must provide a Region System Name (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)");
+			_client = new AmazonKeyManagementServiceClient(regionEndpoint);
 		}
 
 		/// <summary>
@@ -73,6 +81,11 @@ namespace LeapingGorilla.SecretStore.Aws
 		/// <exception cref="KeyManagementServiceUnavailableException"></exception>
 		public byte[] EncryptData(string keyId, byte[] data)
 		{
+			if (_disposed)
+			{
+				throw new ObjectDisposedException("AwsKmsKeyManager");
+			}
+
 			ValidateMasterKey(keyId);
 
 			if (data == null)
@@ -93,7 +106,6 @@ namespace LeapingGorilla.SecretStore.Aws
 			var res = RetryPolicy.ExecuteAndCapture(() =>
 			{
 				using (var msPlainText = new MemoryStream(data))
-				using (var client = CreateClient())
 				{
 					var req = new EncryptRequest
 					{
@@ -101,7 +113,7 @@ namespace LeapingGorilla.SecretStore.Aws
 						Plaintext = msPlainText
 					};
 
-					var t = client.EncryptAsync(req);
+					var t = _client.EncryptAsync(req);
 					t.ConfigureAwait(false);
 					return t.GetAwaiter().GetResult();
 				}
@@ -124,22 +136,24 @@ namespace LeapingGorilla.SecretStore.Aws
 		/// <exception cref="KeyManagementServiceUnavailableException"></exception>
 		public GenerateDataKeyResult GenerateDataKey(string keyId)
 		{
+			if (_disposed)
+			{
+				throw new ObjectDisposedException("AwsKmsKeyManager");
+			}
+
 			ValidateMasterKey(keyId);
 
 			var res = RetryPolicy.ExecuteAndCapture(() =>
 			{
-				using (var client = CreateClient())
+				var req = new GenerateDataKeyRequest
 				{
-					var req = new GenerateDataKeyRequest
-					{
-						KeyId = keyId,
-						KeySpec = DataKeySpec.AES_128
-					};
+					KeyId = keyId,
+					KeySpec = DataKeySpec.AES_128
+				};
 
-					var t = client.GenerateDataKeyAsync(req);
-					t.ConfigureAwait(false);
-					return t.GetAwaiter().GetResult();
-				}
+				var t = _client.GenerateDataKeyAsync(req);
+				t.ConfigureAwait(false);
+				return t.GetAwaiter().GetResult();
 			});
 
 			ValidateResponse(res);
@@ -165,6 +179,11 @@ namespace LeapingGorilla.SecretStore.Aws
 		/// <exception cref="KeyManagementServiceUnavailableException"></exception>
 		public byte[] DecryptData(byte[] data)
 		{
+			if (_disposed)
+			{
+				throw new ObjectDisposedException("AwsKmsKeyManager");
+			}
+
 			if (data == null)
 			{
 				throw new ArgumentNullException(nameof(data));
@@ -183,14 +202,13 @@ namespace LeapingGorilla.SecretStore.Aws
 			var res = RetryPolicy.ExecuteAndCapture(() =>
 			{
 				using (var msData = new MemoryStream(data))
-				using (var client = CreateClient())
 				{
 					var req = new DecryptRequest
 					{
 						CiphertextBlob = msData
 					};
 
-					var t = client.DecryptAsync(req);
+					var t = _client.DecryptAsync(req);
 					t.ConfigureAwait(false);
 					return t.GetAwaiter().GetResult();
 				}
@@ -230,6 +248,23 @@ namespace LeapingGorilla.SecretStore.Aws
 			{
 				throw new KeyManagementServiceUnavailableException(res.Result.HttpStatusCode);
 			}
+		}
+
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				_client?.Dispose();
+				_client = null;
+			}
+
+			_disposed = true;
 		}
 	}
 }

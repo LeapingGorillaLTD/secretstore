@@ -18,7 +18,7 @@ namespace LeapingGorilla.SecretStore.Aws
 	{
 		private string _tableName;
 		private readonly Lazy<Table> _table;
-		private AmazonDynamoDBClient _client;
+		private IAmazonDynamoDB _client;
 		private bool _disposed;
 
 		internal static class Fields
@@ -34,6 +34,13 @@ namespace LeapingGorilla.SecretStore.Aws
 		public AwsDynamoProtectedSecretRepository(AmazonDynamoDBConfig config, string tableName)
 		{
 			_client = config == null ? new AmazonDynamoDBClient() : new AmazonDynamoDBClient(config);
+			_tableName = tableName;
+			_table = new Lazy<Table>(Init, LazyThreadSafetyMode.ExecutionAndPublication);
+		}
+		
+		public AwsDynamoProtectedSecretRepository(IAmazonDynamoDB client, string tableName)
+		{
+			_client = client;
 			_tableName = tableName;
 			_table = new Lazy<Table>(Init, LazyThreadSafetyMode.ExecutionAndPublication);
 		}

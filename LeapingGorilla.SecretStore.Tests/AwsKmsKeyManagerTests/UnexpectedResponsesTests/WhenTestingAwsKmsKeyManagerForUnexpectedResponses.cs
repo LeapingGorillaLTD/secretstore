@@ -1,4 +1,6 @@
-﻿using Amazon.KeyManagementService;
+﻿using System.IO;
+using Amazon.KeyManagementService;
+using LeapingGorilla.SecretStore.Aws;
 using LeapingGorilla.Testing;
 using LeapingGorilla.Testing.Attributes;
 
@@ -6,10 +8,10 @@ namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests.UnexpectedRespo
 {
 	public abstract class WhenTestingAwsKmsKeyManagerForUnexpectedResponses : WhenTestingTheBehaviourOf
 	{
-		public const string KeyId = "Test";
+		public string KeyId = File.ReadAllText("KmsTestKeyArn.txt");
 
 		[ItemUnderTest]
-		public TestAwsKmsKeyManager Manager { get; set; } 
+		public AwsKmsKeyManager Manager { get; set; } 
 
 		[Dependency]
 		public IAmazonKeyManagementService KmsService { get; set; }
