@@ -4,14 +4,8 @@
 	/// Models a secret protected with a document key. The document key itself is protected by 
 	/// a master key.
 	/// </summary>
-	public class ProtectedSecret
+	public class ProtectedSecret : Secret
 	{
-		///<summary>Name of the application that the secret belongs to</summary>
-		public string ApplicationName { get; set; }
-		
-		///<summary>Name of the secret</summary>
-		public string Name { get; set; }
-
 		///<summary>ID of the master key used to protect the document key protecting this secret</summary>
 		public string MasterKeyId { get; set; }
 

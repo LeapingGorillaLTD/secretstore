@@ -7,11 +7,11 @@ namespace LeapingGorilla.SecretStore.Interfaces
 	public interface ISecretStore
 	{
 		/// <summary>
-		/// Saves a secret to the backing secret store.
+		/// Protects a secret and saves it to the backing secret store.
 		/// </summary>
-		/// <param name="keyName">SecretName of the key to use to protect the secret.</param>
+		/// <param name="keyName">Name of the key to use to protect the secret.</param>
 		/// <param name="secret">The secret to save.</param>
-		void Save(string keyName, Secret secret);
+		void ProtectAndSave(string keyName, ClearSecret secret);
 
 		/// <summary>
 		/// Gets the secret with the specified name. Returns null if no secret with the 
@@ -21,7 +21,7 @@ namespace LeapingGorilla.SecretStore.Interfaces
 		/// <param name="secretName">The name of the secret to retrieve.</param>
 		/// <returns>The secret with the given name.</returns>
 		/// <exception cref="SecretNotFoundException">Thrown if the secret cannot be found</exception>
-		Secret Get(string applicationName, string secretName);
+		ClearSecret Get(string applicationName, string secretName);
 
 		/// <summary>
 		/// Gets the secret with the specified name. Returns null if no secret with the 
@@ -31,7 +31,7 @@ namespace LeapingGorilla.SecretStore.Interfaces
 		/// <param name="secretName">The name of the secret to retrieve.</param>
 		/// <returns>The secret with the given name.</returns>
 		/// <exception cref="SecretNotFoundException">Thrown if the secret cannot be found</exception>
-		Task<Secret> GetAsync(string applicationName, string secretName);
+		Task<ClearSecret> GetAsync(string applicationName, string secretName);
 
 		/// <summary>
 		/// Gets all of the secrets for a single application. Returns an empty enumeration if
@@ -39,7 +39,7 @@ namespace LeapingGorilla.SecretStore.Interfaces
 		/// </summary>
 		/// <param name="applicationName">Name of the application to retrieve secrets for.</param>
 		/// <returns>Enumeration of secrets for the application. Empty enumeration if none found</returns>
-		IEnumerable<Secret> GetAllForApplication(string applicationName);
+		IEnumerable<ClearSecret> GetAllForApplication(string applicationName);
 
 		/// <summary>
 		/// Asynchronously gets all of the secrets for a single application. Returns an empty enumeration if
@@ -47,7 +47,7 @@ namespace LeapingGorilla.SecretStore.Interfaces
 		/// </summary>
 		/// <param name="applicationName">Name of the application to retrieve secrets for.</param>
 		/// <returns>Enumeration of secrets for the application. Empty enumeration if none found</returns>
-		Task<IEnumerable<Secret>> GetAllForApplicationAsync(string applicationName);
+		Task<IEnumerable<ClearSecret>> GetAllForApplicationAsync(string applicationName);
 
 		/// <summary>
 		/// Protects the given secret, this leaves the secret in a state ready for
@@ -56,14 +56,14 @@ namespace LeapingGorilla.SecretStore.Interfaces
 		/// <param name="keyName">SecretName of the key used to protect the secret.</param>
 		/// <param name="secret">The secret to be protected.</param>
 		/// <returns>THe secret in a protected form.</returns>
-		ProtectedSecret Protect(string keyName, Secret secret);
+		ProtectedSecret Protect(string keyName, ClearSecret secret);
 
 		/// <summary>
 		/// Unprotects the given protected secret.
 		/// </summary>
 		/// <param name="protectedSecret">The protected secret.</param>
 		/// <returns>An unprotected secret.</returns>
-		Secret Unprotect(ProtectedSecret protectedSecret);
+		ClearSecret Unprotect(ProtectedSecret protectedSecret);
 
 		/// <summary>
 		/// Saves the given protected secret into the secret store. The repository

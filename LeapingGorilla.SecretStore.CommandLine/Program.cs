@@ -38,7 +38,7 @@ namespace LeapingGorilla.SecretStore.CommandLine
 					.WithParsed<GetAllSecretsOption>(opts =>
 					{
 						var secrets = (imp.GetAllSecretsForApplication(opts.TableName, opts.ApplicationName)
-										?? Enumerable.Empty<Secret>()).ToList();
+										?? Enumerable.Empty<ClearSecret>()).ToList();
 						if (!secrets.Any())
 						{
 							Console.WriteLine("No Secrets found");
@@ -56,7 +56,7 @@ namespace LeapingGorilla.SecretStore.CommandLine
 							while (charsLeft > 0)
 							{
 								Console.WriteLine("│{0, -25}│{1,-45}│", 
-									iteration == 0 ? secret.SecretName : String.Empty, 
+									iteration == 0 ? secret.Name : String.Empty, 
 									secret.Value.Substring(iteration * 45, charsLeft >= 45 ? 45 : charsLeft));
 								
 								charsLeft -= 45;

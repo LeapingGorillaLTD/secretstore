@@ -15,7 +15,7 @@ namespace LeapingGorilla.SecretStore.CommandLine
 	    private IProtectedSecretRepository _repo;
 		
 
-	    public IEnumerable<Secret> GetAllSecretsForApplication(string tableName, string applicationName)
+	    public IEnumerable<ClearSecret> GetAllSecretsForApplication(string tableName, string applicationName)
 	    {
 			SetDependencies(tableName);
 		    return _secretStore.GetAllForApplication(applicationName);
@@ -30,7 +30,7 @@ namespace LeapingGorilla.SecretStore.CommandLine
 	    public void AddSecret(string tableName, string key, string application, string name, SecureString value)
 	    {
 		    SetDependencies(tableName);
-		    var s = new Secret(application, name, value.ToUnprotectedString());
+		    var s = new ClearSecret(application, name, value.ToUnprotectedString());
 		    var ps = _secretStore.Protect(key, s);
 		    _secretStore.Save(ps);
 	    }

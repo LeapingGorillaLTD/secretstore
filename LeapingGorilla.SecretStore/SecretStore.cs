@@ -1,69 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using LeapingGorilla.SecretStore.Interfaces;
 
 namespace LeapingGorilla.SecretStore
 {
-	public class SecretStore : ISecretStore
+	public class SecretStore : BaseSecretStore, ISecretStore
 	{
-		private readonly IProtectedSecretRepository _secrets;
-		private readonly IEncryptionManager _encryptionManager;
-
-		private static readonly Encoding SecretEncoding = Encoding.UTF8;
-
 		public SecretStore(IProtectedSecretRepository secrets, IEncryptionManager encryptionManager)
+			:base(secrets, encryptionManager)
 		{
-			_secrets = secrets;
-			_encryptionManager = encryptionManager;
 		}
 		
-		public void Save(string keyName, Secret secret)
+		public void ProtectAndSave(string keyName, ClearSecret secret)
 		{
 			var ps = Protect(keyName, secret);
 			_secrets.Save(ps);
 		}
 
-		public Secret Get(string applicationName, string secretName)
+		public ClearSecret Get(string applicationName, string secretName)
 		{
 			return Unprotect(_secrets.Get(applicationName, secretName));
 		}
 
-		public async Task<Secret> GetAsync(string applicationName, string secretName)
+		public async Task<ClearSecret> GetAsync(string applicationName, string secretName)
 		{
 			return Unprotect(await _secrets.GetAsync(applicationName, secretName));
 		}
 
-		public IEnumerable<Secret> GetAllForApplication(string applicationName)
+		public IEnumerable<ClearSecret> GetAllForApplication(string applicationName)
 		{
 			return _secrets.GetAllForApplication(applicationName).Select(Unprotect).ToList();
 		}
 
-		public async Task<IEnumerable<Secret>> GetAllForApplicationAsync(string applicationName)
+		public async Task<IEnumerable<ClearSecret>> GetAllForApplicationAsync(string applicationName)
 		{
 			var s = await _secrets.GetAllForApplicationAsync(applicationName);
 			return s.Select(Unprotect).ToList();
-		}
-
-		public ProtectedSecret Protect(string keyName, Secret secret)
-		{
-			if (secret == null)
-			{
-				throw new ArgumentNullException(nameof(secret));
-			}
-
-			var encryptedSecret = _encryptionManager.Encrypt(keyName, SecretEncoding.GetBytes(secret.Value));
-			return new ProtectedSecret
-			{
-				ApplicationName = secret.ApplicationName,
-				MasterKeyId = keyName,
-				InitialisationVector = encryptedSecret.InitialisationVector,
-				Name = secret.SecretName,
-				ProtectedDocumentKey = encryptedSecret.EncryptedDataKey,
-				ProtectedSecretValue = encryptedSecret.EncryptedData
-			};
 		}
 
 		public void Save(ProtectedSecret secret)
@@ -84,18 +58,6 @@ namespace LeapingGorilla.SecretStore
 			}
 
 			await _secrets.SaveAsync(secret);
-		}
-
-		public Secret Unprotect(ProtectedSecret protectedSecret)
-		{
-			if (protectedSecret == null)
-			{
-				throw new ArgumentNullException(nameof(protectedSecret));
-			}
-
-			var rawValue = _encryptionManager.Decrypt(protectedSecret.MasterKeyId, protectedSecret.ProtectedDocumentKey, protectedSecret.InitialisationVector, protectedSecret.ProtectedSecretValue);
-
-			return new Secret(protectedSecret.ApplicationName, protectedSecret.Name, SecretEncoding.GetString(rawValue));
 		}
 	}
 }

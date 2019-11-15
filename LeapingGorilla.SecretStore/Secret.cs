@@ -1,18 +1,26 @@
 ﻿namespace LeapingGorilla.SecretStore
 {
-	///<summary>An unprotected secret</summary>
-	public class Secret
+	///<summary>Models the values common to any secret</summary>
+	public abstract class Secret
 	{
+		///<summary>Name of the application that the secret belongs to</summary>
 		public string ApplicationName { get; set; }
-		public string SecretName { get; set; }
-		public string Value { get; set; }
 		
+		///<summary>Name of the secret</summary>
+		public string Name { get; set; }
+		
+		protected Secret() {}
 
-		public Secret(string applicationName, string secretName, string secretValue)
+		/// <summary>
+		/// Instantiates a new Secret with the common properties of application name
+		/// and the name of the secret
+		/// </summary>
+		/// <param name="applicationName">Name of the application that the secret belongs to</param>
+		/// <param name="name">Name of the secret</param>
+		protected Secret(string applicationName, string name)
 		{
 			ApplicationName = applicationName;
-			SecretName = secretName;
-			Value = secretValue;
+			Name = name;
 		}
 	}
 }
