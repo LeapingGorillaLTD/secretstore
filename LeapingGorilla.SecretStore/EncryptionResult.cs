@@ -10,5 +10,14 @@
 
 		///<summary>The encrypted data</summary>
 		public byte[] EncryptedData { get; set; }
+
+		public EncryptionResult() { }
+
+		public EncryptionResult(byte[] iv, byte[] encryptedDataKey, byte[] encryptedData)
+		{
+			InitialisationVector = iv;
+			EncryptedDataKey = encryptedDataKey;
+			EncryptedData = encryptedData;
+		}
 	}
 }

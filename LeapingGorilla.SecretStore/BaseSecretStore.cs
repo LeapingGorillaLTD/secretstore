@@ -10,7 +10,7 @@ namespace LeapingGorilla.SecretStore
 		protected readonly IProtectedSecretRepository _secrets;
 		protected readonly IEncryptionManager _encryptionManager;
 
-		protected static readonly Encoding SecretEncoding = Encoding.UTF8;
+		public static readonly Encoding SecretEncoding = Encoding.UTF8;
 
 		protected BaseSecretStore(
 			IProtectedSecretRepository secrets, 

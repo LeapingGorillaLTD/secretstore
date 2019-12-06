@@ -16,7 +16,8 @@ namespace LeapingGorilla.SecretStore.Caching
 	{
 		private readonly ISecretCache<ClearSecret> _cache;
 
-		public CachingClearSecretStore(IProtectedSecretRepository secrets, 
+		public CachingClearSecretStore(
+			IProtectedSecretRepository secrets, 
 			IEncryptionManager encryptionManager,
 			ISecretCache<ClearSecret> cache) :base(secrets, encryptionManager)
 		{
