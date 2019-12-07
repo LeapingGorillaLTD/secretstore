@@ -9,7 +9,7 @@ namespace LeapingGorilla.SecretStore.Tests.CachingSecretStoreTests.CachingClearS
 		private ClearSecret _returnedSecret;
 
 		[Given]
-		public void SecretNotInCache()
+		public void SecretInCache()
 		{
 			SecretCache.Get(clearSecret.ApplicationName, clearSecret.Name).Returns(clearSecret);
 		}
