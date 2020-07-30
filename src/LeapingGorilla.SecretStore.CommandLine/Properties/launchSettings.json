@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "LeapingGorilla.SecretStore.CommandLine": {
+      "commandName": "Project",
+      "commandLineArgs": "createTable --TableName LeapingGorilla.Dev"
+    }
+  }
+}
