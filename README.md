@@ -28,4 +28,4 @@ It's what we use in our day to day lives. It fits well in our infrastructure and
 
 Secret Store is Open Source made available using the [Apache v2 license](https://www.apache.org/licenses/LICENSE-2.0). 
 
-[View all content](https://bitbucket.org/LeapingGorillaLTD/secretstore/wiki/browse/)
+[View all content](https://github.com/LeapingGorillaLTD/secretstore/wiki)
