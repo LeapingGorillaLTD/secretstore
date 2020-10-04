@@ -1,0 +1,1 @@
+﻿<ConnectionString Here All in one line - role should be able to create and delete tables in DB created by running CreateIntegrationTestsDb.sql>
