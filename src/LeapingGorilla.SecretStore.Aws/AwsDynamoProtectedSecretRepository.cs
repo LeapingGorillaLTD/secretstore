@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,19 +31,23 @@ namespace LeapingGorilla.SecretStore.Aws
 			public const string ProtectedSecretValue = "ProtectedSecretValue";
 			public const string InitialisationVector = "InitialisationVector";
 		}
-		
-		public AwsDynamoProtectedSecretRepository(AmazonDynamoDBConfig config, string tableName)
+
+		private AwsDynamoProtectedSecretRepository(string tableName)
 		{
-			_client = config == null ? new AmazonDynamoDBClient() : new AmazonDynamoDBClient(config);
 			_tableName = tableName;
 			_table = new Lazy<Table>(Init, LazyThreadSafetyMode.ExecutionAndPublication);
 		}
 		
+		public AwsDynamoProtectedSecretRepository(AmazonDynamoDBConfig config, string tableName)
+			: this(tableName)
+		{
+			_client = config == null ? new AmazonDynamoDBClient() : new AmazonDynamoDBClient(config);
+		}
+		
 		public AwsDynamoProtectedSecretRepository(IAmazonDynamoDB client, string tableName)
+			: this(tableName)
 		{
 			_client = client;
-			_tableName = tableName;
-			_table = new Lazy<Table>(Init, LazyThreadSafetyMode.ExecutionAndPublication);
 		}
 
 		private Table Init()
@@ -183,12 +188,14 @@ namespace LeapingGorilla.SecretStore.Aws
 			await _table.Value.PutItemAsync(doc).ConfigureAwait(false);
 		}
 
+		[ExcludeFromCodeCoverage]
 		public void Dispose()
 		{
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
 
+		[ExcludeFromCodeCoverage]
 		protected virtual void Dispose(bool disposing)
 		{
 			if (disposing)

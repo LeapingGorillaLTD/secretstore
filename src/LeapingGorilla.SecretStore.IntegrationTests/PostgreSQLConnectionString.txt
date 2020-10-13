@@ -1,1 +1,1 @@
-﻿<ConnectionString Here All in one line - role should be able to create and delete tables in DB created by running CreateIntegrationTestsDb.sql>
+﻿Server=SQL01;Port=5432;Database=secretstore_integrationtests;User Id=postgres;Password=zip!lob8824;

@@ -44,7 +44,7 @@ namespace LeapingGorilla.SecretStore.IntegrationTests.DbProtectedRepositoryTests
 		}
 		
 		[Then]
-		public void ReturnedSecretShouldHaveExpectedIV()
+		public void ReturnedSecretShouldHaveExpectedIv()
 		{
 			Assert.That(returnedSecret.InitialisationVector, Is.EqualTo(savedSecret.InitialisationVector));
 		}

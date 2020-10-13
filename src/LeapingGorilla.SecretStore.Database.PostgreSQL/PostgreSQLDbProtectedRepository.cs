@@ -8,6 +8,8 @@ namespace LeapingGorilla.SecretStore.Database.PostgreSQL
 {
 	public class PostgreSQLDbProtectedRepository : DbProtectedRepository, ICreateProtectedSecretTable
 	{
+		private string PrimaryKeyName => @$"""pk_{tableName}:ApplicationName-SecretName""";
+
 		public PostgreSQLDbProtectedRepository(string readOnlyConnectionString, string readWriteConnectionString, string tableName) 
 			: base(readOnlyConnectionString, readWriteConnectionString, tableName)
 		{
@@ -17,6 +19,34 @@ namespace LeapingGorilla.SecretStore.Database.PostgreSQL
 			: base(readWriteConnectionString, tableName)
 		{
 		}
+
+		/// <inheritdoc cref="DbProtectedRepository.UpsertSql"/>
+		protected override string UpsertSql => 
+			@$"INSERT INTO {tableName}
+						(
+							ApplicationName, 
+							SecretName, 
+							InitialisationVector, 
+							MasterKeyId, 
+							ProtectedDocumentKey, 
+							ProtectedSecretValue
+						)
+						VALUES
+						(
+							@ApplicationName, 
+							@Name, 
+							@InitialisationVector, 
+							@MasterKeyId, 
+							@ProtectedDocumentKey, 
+							@ProtectedSecretValue
+						)
+						ON CONFLICT ON CONSTRAINT {PrimaryKeyName}
+						DO
+						UPDATE SET 
+							initialisationVector=EXCLUDED.InitialisationVector, 
+							masterKeyId=EXCLUDED.MasterKeyId, 
+							protectedDocumentKey=EXCLUDED.ProtectedDocumentKey,
+							protectedSecretValue=EXCLUDED.ProtectedSecretValue;";
 
 		protected override IDbConnection CreateConnection(bool requiresWrite = false)
 		{
@@ -34,7 +64,7 @@ namespace LeapingGorilla.SecretStore.Database.PostgreSQL
 							MasterKeyId TEXT NOT NULL,
 							ProtectedDocumentKey BYTEA NOT NULL,
 							ProtectedSecretValue BYTEA NOT NULL,
-							PRIMARY KEY(ApplicationName, SecretName)
+							CONSTRAINT {PrimaryKeyName} PRIMARY KEY (ApplicationName, SecretName)
 						);";
 
 			using var conn = CreateConnection(requiresWrite: true);

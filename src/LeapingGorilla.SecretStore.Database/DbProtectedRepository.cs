@@ -3,6 +3,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
+using LeapingGorilla.SecretStore.Exceptions;
 using LeapingGorilla.SecretStore.Interfaces;
 
 namespace LeapingGorilla.SecretStore.Database
@@ -12,7 +13,14 @@ namespace LeapingGorilla.SecretStore.Database
 		protected readonly string readOnlyConnectionString;
 		protected readonly string readWriteConnectionString;
 
-		private readonly string tableName;
+		protected readonly string tableName;
+
+		/// <summary>
+		/// SQL that will be used to INSERT or UPDATE a given row. If your chosen
+		/// DBMS does not support the concept of an all in one UPSERT you can override
+		/// the Save/SaveAsync methods (or maybe you shouldn't inherit from this class)
+		/// </summary>
+		protected abstract string UpsertSql { get; }
 
 		/// <summary>
 		/// Creates a new DbProtectedRepository using the given DB Connection
@@ -64,54 +72,31 @@ namespace LeapingGorilla.SecretStore.Database
 		public ProtectedSecret Get(string applicationName, string secretName)
 		{
 			using var conn = CreateConnection();
-			return conn.QuerySingleOrDefault<ProtectedSecret>($"SELECT * FROM {tableName} WHERE applicationName=@applicationName AND secretName=@secretName",
+			var secret = conn.QuerySingleOrDefault<ProtectedSecret>($"SELECT * FROM {tableName} WHERE applicationName=@applicationName AND secretName=@secretName",
 				new { applicationName, secretName });
+
+			return secret ?? throw new SecretNotFoundException(applicationName, secretName);
 		}
 
 		public async Task<ProtectedSecret> GetAsync(string applicationName, string secretName)
 		{
 			using var conn = CreateConnection();
-			return await conn.QuerySingleOrDefaultAsync<ProtectedSecret>($"SELECT * FROM {tableName} WHERE applicationName=@applicationName AND secretName=@secretName",
+			var secret = await conn.QuerySingleOrDefaultAsync<ProtectedSecret>($"SELECT * FROM {tableName} WHERE applicationName=@applicationName AND secretName=@secretName",
 				new { applicationName, secretName });
+
+			return secret ?? throw new SecretNotFoundException(applicationName, secretName);
 		}
 
-		private string InsertSql => 
-					 @$"INSERT INTO {tableName}
-						(
-							ApplicationName, 
-							SecretName, 
-							InitialisationVector, 
-							MasterKeyId, 
-							ProtectedDocumentKey, 
-							ProtectedSecretValue
-						)
-						VALUES
-						(
-							@ApplicationName, 
-							@Name, 
-							@InitialisationVector, 
-							@MasterKeyId, 
-							@ProtectedDocumentKey, 
-							@ProtectedSecretValue
-						)
-						ON CONFLICT (ApplicationName, SecretName)
-						DO
-						UPDATE SET 
-							initialisationVector=EXCLUDED.InitialisationVector, 
-							masterKeyId=EXCLUDED.MasterKeyId, 
-							protectedDocumentKey=EXCLUDED.ProtectedDocumentKey,
-							protectedSecretValue=EXCLUDED.ProtectedSecretValue;";
-
-		public void Save(ProtectedSecret secret)
+		public virtual void Save(ProtectedSecret secret)
 		{
 			using var conn = CreateConnection(requiresWrite: true);
-			conn.Execute(InsertSql, secret);
+			conn.Execute(UpsertSql, secret);
 		}
 
-		public async Task SaveAsync(ProtectedSecret secret)
+		public virtual async Task SaveAsync(ProtectedSecret secret)
 		{
 			using var conn = CreateConnection(requiresWrite: true);
-			await conn.ExecuteAsync(InsertSql, secret);
+			await conn.ExecuteAsync(UpsertSql, secret);
 		}
 
 		public IEnumerable<ProtectedSecret> GetAllForApplication(string applicationName)
@@ -119,7 +104,7 @@ namespace LeapingGorilla.SecretStore.Database
 			var sql = @$"SELECT * FROM {tableName} WHERE applicationName=@applicationName";
 			
 			using var conn = CreateConnection();
-			return conn.Query<ProtectedSecret>(sql, new { applicationName }).ToList();
+			return (conn.Query<ProtectedSecret>(sql, new { applicationName }) ?? Enumerable.Empty<ProtectedSecret>()).ToList();
 		}
 
 		public async Task<IEnumerable<ProtectedSecret>> GetAllForApplicationAsync(string applicationName)
@@ -130,6 +115,20 @@ namespace LeapingGorilla.SecretStore.Database
 			return (await conn.QueryAsync<ProtectedSecret>(sql, new { applicationName }) ?? Enumerable.Empty<ProtectedSecret>()).ToList();
 		}
 
+		/// <summary>
+		/// Creates a Read/Write or ReadOnly connection depending on the
+		/// <see cref="requiresWrite"/> parameter. The connection will be
+		/// in a state where it is ready to run queries against the data source.
+		/// </summary>
+		/// <param name="requiresWrite">
+		/// Does the query that this connection is being used for require write access?
+		/// If true a ReadWrite connection will be provided, otherwise a Read Only
+		/// connection will be returned.
+		/// </param>
+		/// <returns>
+		/// A read only or read/write connection ready to be used to
+		/// communicate with the DB
+		/// </returns>
 		protected abstract IDbConnection CreateConnection(bool requiresWrite = false);
 	}
 }
