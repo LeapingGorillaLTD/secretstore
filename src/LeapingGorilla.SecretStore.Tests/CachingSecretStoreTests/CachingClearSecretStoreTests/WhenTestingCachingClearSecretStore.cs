@@ -2,8 +2,8 @@
 using LeapingGorilla.SecretStore.Caching.Interfaces;
 using LeapingGorilla.SecretStore.Interfaces;
 using LeapingGorilla.SecretStore.Tests.Builders;
-using LeapingGorilla.Testing;
-using LeapingGorilla.Testing.Attributes;
+using LeapingGorilla.Testing.Core.Attributes;
+using LeapingGorilla.Testing.NUnit;
 
 namespace LeapingGorilla.SecretStore.Tests.CachingSecretStoreTests.CachingClearSecretStoreTests
 {

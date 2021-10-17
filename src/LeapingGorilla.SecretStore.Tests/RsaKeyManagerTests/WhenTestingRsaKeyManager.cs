@@ -3,8 +3,8 @@ using System.Security.Cryptography;
 using System.Xml;
 using LeapingGorilla.SecretStore.Interfaces;
 using LeapingGorilla.SecretStore.Tests.Properties;
-using LeapingGorilla.Testing;
-using LeapingGorilla.Testing.Attributes;
+using LeapingGorilla.Testing.Core.Attributes;
+using LeapingGorilla.Testing.NUnit;
 using NSubstitute;
 
 namespace LeapingGorilla.SecretStore.Tests.RsaKeyManagerTests

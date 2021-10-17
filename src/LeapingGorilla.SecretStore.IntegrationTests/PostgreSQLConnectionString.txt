@@ -1,1 +1,1 @@
-﻿Server=SQL01;Port=5432;Database=secretstore_integrationtests;User Id=postgres;Password=zip!lob8824;
+﻿<CONNSTRHERE>

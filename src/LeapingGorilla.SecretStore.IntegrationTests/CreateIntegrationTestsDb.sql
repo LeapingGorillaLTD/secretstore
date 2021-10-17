@@ -2,10 +2,10 @@
 Secret Store integration tests. This should be accomplished prior to running the
 integration tests.
 
-DROP OWNED BY integration_test_ro CASCADE;
-DROP OWNED BY integration_test_rw CASCADE;
-DROP USER IF EXISTS integration_test_ro;
-DROP USER IF EXISTS integration_test_rw;
+DROP OWNED BY ss_integration_test_ro CASCADE;
+DROP OWNED BY ss_integration_test_rw CASCADE;
+DROP USER IF EXISTS ss_integration_test_ro;
+DROP USER IF EXISTS ss_integration_test_rw;
 DROP DATABASE IF EXISTS secretstore_integrationtests;
 */
 

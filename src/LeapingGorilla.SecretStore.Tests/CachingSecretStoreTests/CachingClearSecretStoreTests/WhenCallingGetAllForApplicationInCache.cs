@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using LeapingGorilla.SecretStore.Tests.Builders;
-using LeapingGorilla.Testing.Attributes;
+using LeapingGorilla.Testing.Core.Attributes;
+using LeapingGorilla.Testing.NUnit.Attributes;
 using NSubstitute;
 using NUnit.Framework;
 

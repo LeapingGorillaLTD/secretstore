@@ -1,7 +1,7 @@
 ﻿using Amazon;
 using Amazon.DynamoDBv2;
 using LeapingGorilla.SecretStore.Aws;
-using LeapingGorilla.Testing;
+using LeapingGorilla.Testing.NUnit;
 
 namespace LeapingGorilla.SecretStore.IntegrationTests.AwsDynamoProtectedSecretRepositoryTests
 {

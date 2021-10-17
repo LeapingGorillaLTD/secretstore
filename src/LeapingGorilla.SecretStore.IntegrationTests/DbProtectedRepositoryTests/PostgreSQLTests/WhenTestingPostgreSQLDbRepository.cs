@@ -3,7 +3,7 @@ using System.Data;
 using System.IO;
 using Dapper;
 using LeapingGorilla.SecretStore.Database.PostgreSQL;
-using LeapingGorilla.Testing;
+using LeapingGorilla.Testing.NUnit;
 using Npgsql;
 using NUnit.Framework;
 
@@ -15,7 +15,7 @@ namespace LeapingGorilla.SecretStore.IntegrationTests.DbProtectedRepositoryTests
 		protected string ReadOnlyConnectionString;
 		protected string ReadWriteConnectionString;
 
-		protected readonly string TableName = "SecretStore_IntegrationTest_" + Guid.NewGuid().ToString("N");
+        protected readonly string TableName = "SecretStore_IntegrationTest" + Guid.NewGuid().ToString("N");
 		protected string DbName;
 
 		private readonly string roUsername = "ss_integration_test_ro";
@@ -67,8 +67,7 @@ namespace LeapingGorilla.SecretStore.IntegrationTests.DbProtectedRepositoryTests
 			// Clean up existing DB or roles
 			try
 			{
-				conn.Execute(@$"DROP TABLE IF EXISTS {TableName};
-			");
+				conn.Execute(@$"DROP TABLE IF EXISTS {TableName};");
 			}
 			catch (Exception ex)
 			{

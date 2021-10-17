@@ -2,7 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using LeapingGorilla.SecretStore.Database.PostgreSQL;
-using LeapingGorilla.Testing.Attributes;
+using LeapingGorilla.Testing.Core.Attributes;
+using LeapingGorilla.Testing.NUnit.Attributes;
 using NUnit.Framework;
 
 namespace LeapingGorilla.SecretStore.IntegrationTests.DbProtectedRepositoryTests.PostgreSQLTests.SecretTests

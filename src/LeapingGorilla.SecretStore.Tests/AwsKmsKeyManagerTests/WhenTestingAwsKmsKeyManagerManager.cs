@@ -1,6 +1,6 @@
 ﻿using LeapingGorilla.SecretStore.Aws;
-using LeapingGorilla.Testing;
-using LeapingGorilla.Testing.Attributes;
+using LeapingGorilla.Testing.Core.Attributes;
+using LeapingGorilla.Testing.NUnit;
 
 namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests
 {

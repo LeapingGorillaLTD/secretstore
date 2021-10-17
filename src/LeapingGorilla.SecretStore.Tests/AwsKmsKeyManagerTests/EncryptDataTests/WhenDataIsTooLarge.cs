@@ -1,7 +1,8 @@
 ﻿using System;
 using LeapingGorilla.SecretStore.Aws;
 using LeapingGorilla.SecretStore.Exceptions;
-using LeapingGorilla.Testing.Attributes;
+using LeapingGorilla.Testing.Core.Attributes;
+using LeapingGorilla.Testing.NUnit.Attributes;
 using NUnit.Framework;
 
 namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests.EncryptDataTests
