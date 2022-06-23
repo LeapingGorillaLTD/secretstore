@@ -7,7 +7,7 @@ namespace LeapingGorilla.SecretStore.IntegrationTests.AwsKmsKeyManagerTests
 {
 	public abstract class WhenTestingAwsKmsKeyManager : WhenTestingTheBehaviourOf
 	{
-		public string DevelopmentKeyId = File.ReadAllText("KmsTestKeyArn.txt");
+		protected readonly string DevelopmentKeyId = File.ReadAllText("KmsTestKeyArn.txt");
 
 		[ItemUnderTest]
 		public AwsKmsKeyManager Manager { get; set; } 
