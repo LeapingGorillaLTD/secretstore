@@ -47,7 +47,7 @@ _ReSharper*/
 .idea
 codebuild_build.*
 DockerData
-
+NuGet
 
 #Certificates
 *.pfx
