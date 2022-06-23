@@ -94,7 +94,7 @@ namespace LeapingGorilla.SecretStore.Caching
 				return cachedSecrets;
 			}
 
-			return null;
+			return Enumerable.Empty<T>();
 		}
 
 		public Task<IEnumerable<T>> GetAllForApplicationAsync(string applicationName)
