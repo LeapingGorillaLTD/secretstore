@@ -7,6 +7,7 @@ Integration tests by definition rely on having access to external services. For 
 Tell Git that you don't want to record changes to configuration files containing potentially sensitive information.
 
 `git update-index --assume-unchanged src/LeapingGorilla.SecretStore.IntegrationTests/KmsTestKeyArn.txt`
+
 `git update-index --assume-unchanged src/LeapingGorilla.SecretStore.Tests/KmsTestKeyArn.txt`
 
 ## Database Tests
