@@ -17,7 +17,25 @@ namespace LeapingGorilla.SecretStore.Caching
 
 		private HashSet<string> Keys { get; }
 
-		public InMemoryCache(string cachePrefix = null)
+		/// <summary>
+		/// Default options applied to all secrets added to the cache. If none
+		/// supplied in the constructor we will use an absolute relative expiry
+		/// equal to <see cref="SecretAge"/> and a priority of "Normal"
+		/// </summary>
+        public MemoryCacheEntryOptions CacheEntryOptions { get; }
+
+		/// <summary>
+		/// Create a new InMemoryCache using the given prefix and cache entry options
+		/// </summary>
+		/// <param name="cachePrefix">(Optional) Prefix which will be added to every cache key</param>
+		/// <param name="cacheEntryOptions">
+		/// (Optional) Default options applied to all secrets added to the cache. If none
+        /// supplied we will use an absolute relative expiry equal to <see cref="SecretAge"/>
+        /// and a priority of "Normal"
+		/// </param>
+		public InMemoryCache(
+            string cachePrefix = null, 
+            MemoryCacheEntryOptions cacheEntryOptions = null)
 		{
 			CachePrefix = cachePrefix;
 			Cache = new MemoryCache(new MemoryCacheOptions
@@ -25,12 +43,18 @@ namespace LeapingGorilla.SecretStore.Caching
 				ExpirationScanFrequency = TimeSpan.FromMinutes(1)
 			});
 			Keys = new HashSet<string>();
-		}
+
+            CacheEntryOptions = cacheEntryOptions ?? new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = SecretAge,
+                Priority = CacheItemPriority.Normal
+            };
+        }
 
 		public void Add(T secret)
 		{
 			var key = GenerateCacheKey(secret);
-			Cache.Set(key, secret, SecretAge);
+			Cache.Set(key, secret, CacheEntryOptions);
 		}
 
 		public Task AddAsync(T secret)
@@ -70,7 +94,7 @@ namespace LeapingGorilla.SecretStore.Caching
 				return cachedSecrets;
 			}
 
-			return null;
+			return Enumerable.Empty<T>();
 		}
 
 		public Task<IEnumerable<T>> GetAllForApplicationAsync(string applicationName)
@@ -112,15 +136,9 @@ namespace LeapingGorilla.SecretStore.Caching
 		
 		private string GenerateCacheKey(string applicationName, string name)
 		{
-			string key;
-			if (CachePrefix != null)
-			{
-				key = $"{CachePrefix}:{applicationName}:{name}";
-			}
-			else
-			{
-				key = $"{applicationName}:{name}";
-			}
+            var key = CachePrefix != null 
+                        ? $"{CachePrefix}:{applicationName}:{name}" 
+                        : $"{applicationName}:{name}";
 
 			Keys.Add(key);
 			return key;

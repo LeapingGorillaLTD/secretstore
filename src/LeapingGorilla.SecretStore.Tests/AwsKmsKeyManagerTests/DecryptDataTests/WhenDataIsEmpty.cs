@@ -1,5 +1,6 @@
 ﻿using System;
-using LeapingGorilla.Testing.Attributes;
+using LeapingGorilla.Testing.Core.Attributes;
+using LeapingGorilla.Testing.NUnit.Attributes;
 using NUnit.Framework;
 
 namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests.DecryptDataTests
@@ -7,19 +8,12 @@ namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests.DecryptDataTest
 	public class WhenDataIsEmpty : WhenTestingAwsKmsKeyManagerManager
 	{
 		private byte[] _data;
-		private string _keyId;
 		private Exception _ex;
 
 		[Given]
 		public void WeHaveData()
 		{
-			_data = new byte[0];
-		}
-
-		[Given]
-		public void WeHaveKeyId()
-		{
-			_keyId = "Test";
+			_data = Array.Empty<byte>();
 		}
 
 		[When]

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,19 +31,23 @@ namespace LeapingGorilla.SecretStore.Aws
 			public const string ProtectedSecretValue = "ProtectedSecretValue";
 			public const string InitialisationVector = "InitialisationVector";
 		}
-		
-		public AwsDynamoProtectedSecretRepository(AmazonDynamoDBConfig config, string tableName)
+
+		private AwsDynamoProtectedSecretRepository(string tableName)
 		{
-			_client = config == null ? new AmazonDynamoDBClient() : new AmazonDynamoDBClient(config);
 			_tableName = tableName;
 			_table = new Lazy<Table>(Init, LazyThreadSafetyMode.ExecutionAndPublication);
 		}
 		
+		public AwsDynamoProtectedSecretRepository(AmazonDynamoDBConfig config, string tableName)
+			: this(tableName)
+		{
+			_client = config == null ? new AmazonDynamoDBClient() : new AmazonDynamoDBClient(config);
+		}
+		
 		public AwsDynamoProtectedSecretRepository(IAmazonDynamoDB client, string tableName)
+			: this(tableName)
 		{
 			_client = client;
-			_tableName = tableName;
-			_table = new Lazy<Table>(Init, LazyThreadSafetyMode.ExecutionAndPublication);
 		}
 
 		private Table Init()
@@ -63,9 +68,10 @@ namespace LeapingGorilla.SecretStore.Aws
 			return table;
 		}
 
-		public async Task CreateProtectedSecretTableAsync(string tableName)
+		/// <inheritdoc />
+		public async Task CreateProtectedSecretTableAsync(string secretTableName)
 		{
-			_tableName = tableName;
+			_tableName = secretTableName;
 			var tableDetail = new CreateTableRequest
 			{
 				TableName = _tableName,
@@ -105,6 +111,7 @@ namespace LeapingGorilla.SecretStore.Aws
 			}
 		}
 
+		/// <inheritdoc />
 		public ProtectedSecret Get(string applicationName, string secretName)
 		{
 			var t = GetAsync(applicationName, secretName);
@@ -112,6 +119,7 @@ namespace LeapingGorilla.SecretStore.Aws
 			return t.GetAwaiter().GetResult();
 		}
 
+		/// <inheritdoc />
 		public async Task<ProtectedSecret> GetAsync(string applicationName, string secretName)
 		{
 			if (_disposed)
@@ -128,6 +136,7 @@ namespace LeapingGorilla.SecretStore.Aws
 			return document.ToProtectedSecret();
 		}
 
+		/// <inheritdoc />
 		public IEnumerable<ProtectedSecret> GetAllForApplication(string applicationName)
 		{
 			var t = GetAllForApplicationAsync(applicationName);
@@ -135,6 +144,7 @@ namespace LeapingGorilla.SecretStore.Aws
 			return t.GetAwaiter().GetResult();
 		}
 		
+		/// <inheritdoc />
 		public async Task<IEnumerable<ProtectedSecret>> GetAllForApplicationAsync(string applicationName)
 		{
 			if (_disposed)
@@ -156,6 +166,7 @@ namespace LeapingGorilla.SecretStore.Aws
 			return bg.Select(AwsExtensions.ToProtectedSecret).ToList();
 		}
 
+		/// <inheritdoc />
 		public void Save(ProtectedSecret secret)
 		{
 			var t = SaveAsync(secret);
@@ -163,6 +174,7 @@ namespace LeapingGorilla.SecretStore.Aws
 			t.GetAwaiter().GetResult();
 		}
 
+		/// <inheritdoc />
 		public async Task SaveAsync(ProtectedSecret secret)
 		{
 			if (_disposed)
@@ -183,12 +195,14 @@ namespace LeapingGorilla.SecretStore.Aws
 			await _table.Value.PutItemAsync(doc).ConfigureAwait(false);
 		}
 
+		[ExcludeFromCodeCoverage]
 		public void Dispose()
 		{
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
 
+		[ExcludeFromCodeCoverage]
 		protected virtual void Dispose(bool disposing)
 		{
 			if (disposing)

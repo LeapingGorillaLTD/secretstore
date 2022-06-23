@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -61,6 +62,7 @@ namespace LeapingGorilla.SecretStore.Aws
 		/// </summary>
 		/// <param name="endpoint">The region endpoint i.e. eu-west-1 or us-west-2.</param>
 		/// <exception cref="ArgumentException">You must provide a Region System Name (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)</exception>
+		[ExcludeFromCodeCoverage]
 		public AwsKmsKeyManager(RegionEndpoint endpoint)
 		{
 			var regionEndpoint = endpoint ?? throw new ArgumentException("You must provide a Region System Name (i.e. eu-west-1 or us-west-2; see http://docs.aws.amazon.com/general/latest/gr/rande.html for the full list)");
@@ -250,12 +252,14 @@ namespace LeapingGorilla.SecretStore.Aws
 			}
 		}
 
+		[ExcludeFromCodeCoverage]
 		public void Dispose()
 		{
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
 
+		[ExcludeFromCodeCoverage]
 		protected virtual void Dispose(bool disposing)
 		{
 			if (disposing)

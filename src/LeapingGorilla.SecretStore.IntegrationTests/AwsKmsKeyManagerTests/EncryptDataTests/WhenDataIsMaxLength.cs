@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using LeapingGorilla.SecretStore.Aws;
-using LeapingGorilla.Testing.Attributes;
+using LeapingGorilla.Testing.Core.Attributes;
+using LeapingGorilla.Testing.NUnit.Attributes;
 using NUnit.Framework;
 
 namespace LeapingGorilla.SecretStore.IntegrationTests.AwsKmsKeyManagerTests.EncryptDataTests

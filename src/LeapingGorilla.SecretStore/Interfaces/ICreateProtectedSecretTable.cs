@@ -6,10 +6,12 @@ namespace LeapingGorilla.SecretStore.Interfaces
 	public interface ICreateProtectedSecretTable
 	{
 		/// <summary>
-		/// Creates the protected secret table asynchronously.
+		/// Creates a table in the data source suitable for storing protected secrets.
+		/// The table will be created asynchronously. 
 		/// </summary>
-		/// <param name="tableName">Name of the table.</param>
-		/// <returns>Task to await</returns>
-		Task CreateProtectedSecretTableAsync(string tableName);
+		/// <param name="secretTableName">
+		/// The name we should use for the table containing the secrets
+		/// </param>
+		Task CreateProtectedSecretTableAsync(string secretTableName);
 	}
 }

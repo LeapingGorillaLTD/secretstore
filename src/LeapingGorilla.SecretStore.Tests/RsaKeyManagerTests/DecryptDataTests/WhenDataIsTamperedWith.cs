@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Security.Cryptography;
 using LeapingGorilla.SecretStore.Exceptions;
-using LeapingGorilla.SecretStore.Tests.Properties;
-using LeapingGorilla.Testing.Attributes;
+using LeapingGorilla.Testing.Core.Attributes;
+using LeapingGorilla.Testing.NUnit.Attributes;
 using NSubstitute;
 using NUnit.Framework;
 

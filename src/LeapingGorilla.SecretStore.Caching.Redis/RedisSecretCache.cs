@@ -154,11 +154,21 @@ namespace LeapingGorilla.SecretStore.Caching.Redis
 
 		private T Deserialize(string serialisedSecret)
 		{
+            if (String.IsNullOrWhiteSpace(serialisedSecret))
+            {
+                return default;
+            }
+
 			return JsonSerializer.Deserialize<T>(serialisedSecret, _options);
 		}
 		
 		private async Task<T> DeserializeAsync(string serialisedSecret)
 		{
+            if (String.IsNullOrWhiteSpace(serialisedSecret))
+            {
+                return default;
+            }
+
 			await using var ms = new MemoryStream(Encoding.UTF8.GetBytes(serialisedSecret));
 			return await JsonSerializer.DeserializeAsync<T>(ms, _options);
 		}
