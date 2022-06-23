@@ -23,30 +23,30 @@ namespace LeapingGorilla.SecretStore.Database.PostgreSQL
 		/// <inheritdoc cref="DbProtectedRepository.UpsertSql"/>
 		protected override string UpsertSql => 
 			@$"INSERT INTO {tableName}
-						(
-							ApplicationName, 
-							SecretName, 
-							InitialisationVector, 
-							MasterKeyId, 
-							ProtectedDocumentKey, 
-							ProtectedSecretValue
-						)
-						VALUES
-						(
-							@ApplicationName, 
-							@Name, 
-							@InitialisationVector, 
-							@MasterKeyId, 
-							@ProtectedDocumentKey, 
-							@ProtectedSecretValue
-						)
-						ON CONFLICT ON CONSTRAINT {PrimaryKeyName}
-						DO
-						UPDATE SET 
-							initialisationVector=EXCLUDED.InitialisationVector, 
-							masterKeyId=EXCLUDED.MasterKeyId, 
-							protectedDocumentKey=EXCLUDED.ProtectedDocumentKey,
-							protectedSecretValue=EXCLUDED.ProtectedSecretValue;";
+				(
+					ApplicationName, 
+					SecretName, 
+					InitialisationVector, 
+					MasterKeyId, 
+					ProtectedDocumentKey, 
+					ProtectedSecretValue
+				)
+				VALUES
+				(
+					@ApplicationName, 
+					@Name, 
+					@InitialisationVector, 
+					@MasterKeyId, 
+					@ProtectedDocumentKey, 
+					@ProtectedSecretValue
+				)
+				ON CONFLICT ON CONSTRAINT {PrimaryKeyName}
+				DO
+				UPDATE SET 
+					initialisationVector=EXCLUDED.InitialisationVector, 
+					masterKeyId=EXCLUDED.MasterKeyId, 
+					protectedDocumentKey=EXCLUDED.ProtectedDocumentKey,
+					protectedSecretValue=EXCLUDED.ProtectedSecretValue;";
 
 		protected override IDbConnection CreateConnection(bool requiresWrite = false)
 		{

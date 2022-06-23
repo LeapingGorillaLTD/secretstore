@@ -7,21 +7,20 @@ Integration tests by definition rely on having access to external services. For 
 Tell Git that you don't want to record changes to configuration files containing potentially sensitive information.
 
 `git update-index --assume-unchanged src/LeapingGorilla.SecretStore.IntegrationTests/KmsTestKeyArn.txt`
-`git update-index --assume-unchanged src/LeapingGorilla.SecretStore.IntegrationTests/PostgreSQLConnectionString.txt`
 
 ## Database Tests
 
-1. Create a database to contain tables for your integration tests. You can use the `CreateIntegrationTestsDb.sql` scripts to make this easier.
+1. Navigate to `docker/secretstore-integration-tests`
 
-2. Add a connection string to the `PostgreSQLConnectionString.txt` file. This should be on a single line and should have permissions to connect to the database and delete tables. This should look something like:
-
-`Server=SQL01;Port=5432;Database=secretstore_integrationtests;User Id=ssuser;Password=XXX;`
+2. Start the test database using `docker compose up -d`
 
 3. Run the tests
 
+To clean up run `docker compose down` from the `docker/secretstore-integration-tests` directory and delete the `DockerData` directory. 
+
 ## AWS Tests
 
-1. Create a suitable user or role with access to KMS and DynamoDB. The integration tests follow [Amazon's conventions](https://docs.aws.amazon.com/sdk-for-net/latest/developer-guide/net-dg-config-creds.html) for looking up credentials. 
+1. Create a suitable user or role with access to KMS and DynamoDB. 
 
 2. Create a key in KMS. The role created in step 1 should be able to use the key. 
 

@@ -46,6 +46,7 @@ _ReSharper*/
 .[Ii]dea/*
 .idea
 codebuild_build.*
+DockerData
 
 
 #Certificates

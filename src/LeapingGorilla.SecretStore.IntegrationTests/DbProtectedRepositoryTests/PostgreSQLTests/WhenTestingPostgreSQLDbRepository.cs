@@ -16,7 +16,7 @@ namespace LeapingGorilla.SecretStore.IntegrationTests.DbProtectedRepositoryTests
 		protected string ReadWriteConnectionString;
 
         protected readonly string TableName = "SecretStore_IntegrationTest" + Guid.NewGuid().ToString("N");
-		protected string DbName;
+		private const string DbName = "ss_integration_test_db";
 
 		private readonly string roUsername = "ss_integration_test_ro";
 		private readonly string rwUsername = "ss_integration_test";
@@ -26,37 +26,34 @@ namespace LeapingGorilla.SecretStore.IntegrationTests.DbProtectedRepositoryTests
 		protected override void CreateManualDependencies()
 		{
 			base.CreateManualDependencies();
-
-			DbName = $"SecretStore_IntegrationTests".ToLowerInvariant();
-			var connStr = File.ReadAllText("PostgreSQLConnectionString.txt")?.Trim()
-			              ?? throw new ApplicationException("Failed to find a connection string in PostgreSQLConnectionString.txt");
-
-			using var conn = new NpgsqlConnection(connStr);
-			CleanupDb(conn);
-
-			var roPassword = "concise-cornfield-celery-defiling-brethren-drizzle";
-			var rwPassword = "managing-octane-job-rebate-scolding-schematic";
-
-			// Determine the RO/RW connection strings
-			var roConnStr = new NpgsqlConnectionStringBuilder(conn.ConnectionString)
-			{
-				Database = DbName, 
-				Username = roUsername, 
-				Password = roPassword
-			};
-			ReadOnlyConnectionString = roConnStr.ToString();
 			
-			var rwConnStr = new NpgsqlConnectionStringBuilder(conn.ConnectionString)
-			{
-				Database = DbName, 
-				Username = rwUsername, 
-				Password = rwPassword
-			};
-			ReadWriteConnectionString = rwConnStr.ToString();
+			// Determine the RO/RW connection strings
+            var roConnStr = new NpgsqlConnectionStringBuilder()
+            {
+	            Host = "localhost",
+	            Port = 54340,
+                Database = DbName, 
+                Username = roUsername, 
+                Password = "concise-cornfield-celery-defiling-brethren-drizzle"
+            };
+            
+            var rwConnStr = new NpgsqlConnectionStringBuilder()
+            {
+	            Host = "localhost",
+	            Port = 54340,
+	            Database = DbName, 
+	            Username = rwUsername, 
+	            Password = "managing-octane-job-rebate-scolding-schematic"
+            };
+
+            ReadOnlyConnectionString = roConnStr.ToString();
+            ReadWriteConnectionString = rwConnStr.ToString();
+
+            CleanupDb();
 		}
 
 		[OneTimeTearDown]
-		public void DropDb()
+		public void CleanupDb()
 		{
 			using var conn = new NpgsqlConnection(ReadWriteConnectionString);
 			CleanupDb(conn);
@@ -64,7 +61,7 @@ namespace LeapingGorilla.SecretStore.IntegrationTests.DbProtectedRepositoryTests
 
 		private void CleanupDb(IDbConnection conn)
 		{
-			// Clean up existing DB or roles
+			// Clean up existing DB
 			try
 			{
 				conn.Execute(@$"DROP TABLE IF EXISTS {TableName};");
