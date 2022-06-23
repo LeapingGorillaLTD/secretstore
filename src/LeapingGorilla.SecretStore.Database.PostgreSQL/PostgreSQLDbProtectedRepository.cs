@@ -48,6 +48,7 @@ namespace LeapingGorilla.SecretStore.Database.PostgreSQL
 					protectedDocumentKey=EXCLUDED.ProtectedDocumentKey,
 					protectedSecretValue=EXCLUDED.ProtectedSecretValue;";
 
+		/// <inheritdoc />
 		protected override IDbConnection CreateConnection(bool requiresWrite = false)
 		{
 			return requiresWrite
@@ -55,9 +56,10 @@ namespace LeapingGorilla.SecretStore.Database.PostgreSQL
 				: new NpgsqlConnection(readOnlyConnectionString);
 		}
 
-		public async Task CreateProtectedSecretTableAsync(string tableName)
+		/// <inheritdoc />
+		public async Task CreateProtectedSecretTableAsync(string secretTableName)
 		{
-			var sql = $@"CREATE TABLE {tableName} (
+			var sql = $@"CREATE TABLE {secretTableName} (
 							ApplicationName TEXT NOT NULL,
 							SecretName TEXT NOT NULL,
 							InitialisationVector BYTEA NOT NULL,

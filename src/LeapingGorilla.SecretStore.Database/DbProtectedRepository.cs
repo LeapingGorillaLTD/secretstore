@@ -69,6 +69,7 @@ namespace LeapingGorilla.SecretStore.Database
 			this.tableName = tableName;
 		}
 
+		/// <inheritdoc />
 		public ProtectedSecret Get(string applicationName, string secretName)
 		{
 			using var conn = CreateConnection();
@@ -78,6 +79,7 @@ namespace LeapingGorilla.SecretStore.Database
 			return secret ?? throw new SecretNotFoundException(applicationName, secretName);
 		}
 
+		/// <inheritdoc />
 		public async Task<ProtectedSecret> GetAsync(string applicationName, string secretName)
 		{
 			using var conn = CreateConnection();
@@ -87,18 +89,21 @@ namespace LeapingGorilla.SecretStore.Database
 			return secret ?? throw new SecretNotFoundException(applicationName, secretName);
 		}
 
+		/// <inheritdoc />
 		public virtual void Save(ProtectedSecret secret)
 		{
 			using var conn = CreateConnection(requiresWrite: true);
 			conn.Execute(UpsertSql, secret);
 		}
 
+		/// <inheritdoc />
 		public virtual async Task SaveAsync(ProtectedSecret secret)
 		{
 			using var conn = CreateConnection(requiresWrite: true);
 			await conn.ExecuteAsync(UpsertSql, secret);
 		}
 
+		/// <inheritdoc />
 		public IEnumerable<ProtectedSecret> GetAllForApplication(string applicationName)
 		{
 			var sql = @$"SELECT * FROM {tableName} WHERE applicationName=@applicationName";
@@ -107,6 +112,7 @@ namespace LeapingGorilla.SecretStore.Database
 			return (conn.Query<ProtectedSecret>(sql, new { applicationName }) ?? Enumerable.Empty<ProtectedSecret>()).ToList();
 		}
 
+		/// <inheritdoc />
 		public async Task<IEnumerable<ProtectedSecret>> GetAllForApplicationAsync(string applicationName)
 		{
 			var sql = @$"SELECT * FROM {tableName} WHERE applicationName=@applicationName";

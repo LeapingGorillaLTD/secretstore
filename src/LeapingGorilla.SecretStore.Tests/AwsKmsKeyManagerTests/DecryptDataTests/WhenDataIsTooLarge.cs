@@ -10,19 +10,12 @@ namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests.DecryptDataTest
 	public class WhenDataIsTooLarge : WhenTestingAwsKmsKeyManagerManager
 	{
 		private byte[] _data;
-		private string _keyId;
 		private Exception _ex;
 
 		[Given]
 		public void WeHaveData()
 		{
 			_data = new byte[AwsKmsKeyManager.MaxDecryptPayloadSize + 1];
-		}
-
-		[Given]
-		public void WeHaveKeyId()
-		{
-			_keyId = "Test";
 		}
 
 		[When]

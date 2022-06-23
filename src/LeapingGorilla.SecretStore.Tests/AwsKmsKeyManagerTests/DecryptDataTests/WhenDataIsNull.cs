@@ -8,7 +8,6 @@ namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests.DecryptDataTest
 	public class WhenDataIsNull : WhenTestingAwsKmsKeyManagerManager
 	{
 		private byte[] _data;
-		private string _keyId;
 		private Exception _ex;
 
 		[Given]
@@ -16,13 +15,7 @@ namespace LeapingGorilla.SecretStore.Tests.AwsKmsKeyManagerTests.DecryptDataTest
 		{
 			_data = null;
 		}
-
-		[Given]
-		public void WeHaveKeyId()
-		{
-			_keyId = "Test";
-		}
-
+		
 		[When]
 		public void WeCallEncrypt()
 		{
