@@ -14,7 +14,6 @@
 using LeapingGorilla.SecretStore.Exceptions;
 using LeapingGorilla.Testing.Core.Attributes;
 using LeapingGorilla.Testing.NUnit.Attributes;
-using NUnit.Framework;
 
 namespace LeapingGorilla.SecretStore.IntegrationTests.DbProtectedRepositoryTests.PostgreSQLTests.SecretTests
 {

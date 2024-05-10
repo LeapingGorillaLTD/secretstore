@@ -11,7 +11,6 @@
 //    limitations under the License.
 // */
 
-using System.Threading.Tasks;
 using LeapingGorilla.SecretStore.Database.PostgreSQL;
 using LeapingGorilla.Testing.Core.Attributes;
 

@@ -11,7 +11,6 @@
 //    limitations under the License.
 // */
 
-using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
 using FluentAssertions;
@@ -19,7 +18,6 @@ using FluentAssertions.Extensions;
 using LeapingGorilla.SecretStore.Tests.Builders;
 using LeapingGorilla.Testing.Core.Attributes;
 using LeapingGorilla.Testing.NUnit.Attributes;
-using NUnit.Framework;
 
 namespace LeapingGorilla.SecretStore.IntegrationTests.AwsDynamoProtectedSecretRepositoryTests.CreateTableTests
 {

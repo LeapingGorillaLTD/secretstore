@@ -18,7 +18,6 @@ using Dapper;
 using LeapingGorilla.SecretStore.Database.PostgreSQL;
 using LeapingGorilla.Testing.NUnit;
 using Npgsql;
-using NUnit.Framework;
 
 namespace LeapingGorilla.SecretStore.IntegrationTests.DbProtectedRepositoryTests.PostgreSQLTests
 {
@@ -29,10 +28,6 @@ namespace LeapingGorilla.SecretStore.IntegrationTests.DbProtectedRepositoryTests
 		protected string ReadWriteConnectionString;
 
         protected readonly string TableName = "SecretStore_IntegrationTest" + Guid.NewGuid().ToString("N");
-		private const string DbName = "ss_integration_test_db";
-
-		private readonly string roUsername = "ss_integration_test_ro";
-		private readonly string rwUsername = "ss_integration_test";
 
 		public PostgreSQLDbProtectedRepository Repository { get; set; }
 
@@ -40,27 +35,8 @@ namespace LeapingGorilla.SecretStore.IntegrationTests.DbProtectedRepositoryTests
 		{
 			base.CreateManualDependencies();
 			
-			// Determine the RO/RW connection strings
-            var roConnStr = new NpgsqlConnectionStringBuilder()
-            {
-	            Host = "localhost",
-	            Port = 54340,
-                Database = DbName, 
-                Username = roUsername, 
-                Password = "concise-cornfield-celery-defiling-brethren-drizzle"
-            };
-            
-            var rwConnStr = new NpgsqlConnectionStringBuilder()
-            {
-	            Host = "localhost",
-	            Port = 54340,
-	            Database = DbName, 
-	            Username = rwUsername, 
-	            Password = "managing-octane-job-rebate-scolding-schematic"
-            };
-
-            ReadOnlyConnectionString = roConnStr.ToString();
-            ReadWriteConnectionString = rwConnStr.ToString();
+            ReadOnlyConnectionString = SetupFixture.ReadOnlyConnectionString;
+            ReadWriteConnectionString = SetupFixture.ReadWriteConnectionString;
 
             CleanupDb();
 		}
