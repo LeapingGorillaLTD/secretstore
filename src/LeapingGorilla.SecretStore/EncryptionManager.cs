@@ -79,9 +79,7 @@ namespace LeapingGorilla.SecretStore
 
 		private SymmetricAlgorithm CreateSymmetricKeyAlgorithm()
 		{
-			const string algo = "AesManaged";
-			var aes = Aes.Create(algo) 
-				?? throw new ApplicationException($"Failed to create SymmetricAlgorithm - {algo}");
+			var aes = Aes.Create();
 			aes.Mode = CipherMode.CBC;
 			aes.Padding = PaddingMode.PKCS7;
 
