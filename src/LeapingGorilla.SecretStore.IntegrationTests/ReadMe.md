@@ -1,6 +1,6 @@
 ﻿# Running Integration Tests
 
-Integration tests by definition rely on having access to external services. For SecretStore our integration tests need to access AWS and a Postgres Database. We use files in the root of the solution to contain configuration of these items so taht we do not commit sensitive information to the repository.
+Integration tests by definition rely on having access to external services. For SecretStore our integration tests need to access AWS and a Postgres Database. We use files in the root of the solution to contain configuration of these items so that we do not commit sensitive information to the repository.
 
 # Getting Started
 
