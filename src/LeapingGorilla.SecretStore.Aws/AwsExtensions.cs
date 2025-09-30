@@ -11,22 +11,48 @@
 //    limitations under the License.
 // */
 
-using Amazon.DynamoDBv2.DocumentModel;
+using System.Collections.Generic;
+using System.IO;
+using Amazon.DynamoDBv2.Model;
 
 namespace LeapingGorilla.SecretStore.Aws
 {
 	public static class AwsExtensions
 	{
-		public static ProtectedSecret ToProtectedSecret(this Document document)
+		/// <summary>
+		/// Convert a DynamoDb GetItem response to a ProtectedSecret
+		/// </summary>
+		/// <param name="document"></param>
+		/// <returns></returns>
+		public static ProtectedSecret ToProtectedSecret(this Dictionary<string, AttributeValue> document)
 		{
 			return new ProtectedSecret
 			{
-				ApplicationName = document[AwsDynamoProtectedSecretRepository.Fields.ApplicationName].AsString(),
-				Name = document[AwsDynamoProtectedSecretRepository.Fields.SecretName].AsString(),
-				MasterKeyId = document[AwsDynamoProtectedSecretRepository.Fields.MasterKeyId].AsString(),
-				ProtectedDocumentKey = document[AwsDynamoProtectedSecretRepository.Fields.ProtectedDocumentKey].AsByteArray(),
-				ProtectedSecretValue = document[AwsDynamoProtectedSecretRepository.Fields.ProtectedSecretValue].AsByteArray(),
-				InitialisationVector = document[AwsDynamoProtectedSecretRepository.Fields.InitialisationVector].AsByteArray()
+				ApplicationName = document[AwsDynamoProtectedSecretRepository.Fields.ApplicationName].S,
+				Name = document[AwsDynamoProtectedSecretRepository.Fields.SecretName].S,
+				MasterKeyId = document[AwsDynamoProtectedSecretRepository.Fields.MasterKeyId].S,
+				ProtectedDocumentKey = document[AwsDynamoProtectedSecretRepository.Fields.ProtectedDocumentKey].B.ToArray(),
+				ProtectedSecretValue = document[AwsDynamoProtectedSecretRepository.Fields.ProtectedSecretValue].B.ToArray(),
+				InitialisationVector = document[AwsDynamoProtectedSecretRepository.Fields.InitialisationVector].B.ToArray()
+			};
+		}
+		
+		/// <summary>
+		/// Take a ProtectedSecret and convert it to a DynamoDb attribute map
+		/// suitable for use in a PutItem request.
+		/// </summary>
+		/// <param name="secret">Secret we want to convert to an attribute map</param>
+		/// <returns>Attribute map suitable for use in a DynamoDB PUT request</returns>
+		public static Dictionary<string, AttributeValue> ToAttributeMap(this ProtectedSecret secret)
+		{
+			return new Dictionary<string, AttributeValue>
+			{
+				{AwsDynamoProtectedSecretRepository.Fields.ApplicationName, new AttributeValue {S = secret.ApplicationName}},
+				{AwsDynamoProtectedSecretRepository.Fields.SecretName, new AttributeValue {S = secret.Name}},
+				{AwsDynamoProtectedSecretRepository.Fields.MasterKeyId, new AttributeValue {S = secret.MasterKeyId}},
+				{AwsDynamoProtectedSecretRepository.Fields.ProtectedDocumentKey, new AttributeValue {B = new MemoryStream(secret.ProtectedDocumentKey)}},
+				{AwsDynamoProtectedSecretRepository.Fields.ProtectedSecretValue, new AttributeValue {B = new MemoryStream(secret.ProtectedSecretValue)}},
+				{AwsDynamoProtectedSecretRepository.Fields.InitialisationVector, new AttributeValue {B = new MemoryStream(secret.InitialisationVector)}}
 			};
 		}
 	}

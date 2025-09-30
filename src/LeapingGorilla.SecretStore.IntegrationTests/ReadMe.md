@@ -22,9 +22,13 @@ To clean up run `docker compose down` from the `docker/secretstore-integration-t
 
 ## AWS Tests
 
-1. Create a suitable user or role with access to KMS and DynamoDB. 
+1. Create a suitable user or role with access to KMS and DynamoDB in EU-West-1 region. 
 
-2. Create a key in KMS. The role created in step 1 should be able to use the key. 
+2. Create a key in KMS in EU-West-1 region. The role created in step 1 should be able to use the key. The key should be set to:
+    * Symmetric
+    * Encrypt and Decrypt
+    * KMS Generated Material
+    * Single-region
 
 3. Add the ARN for the key created in step 2 to the `KmsTestKeyArn.txt` file. This should exist on a single line without any quotes or angle brackets like:
 

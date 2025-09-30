@@ -11,6 +11,9 @@
 //    limitations under the License.
 // */
 
+using System;
+using System.Linq;
+
 namespace LeapingGorilla.SecretStore
 {
 	///<summary>
@@ -36,5 +39,35 @@ namespace LeapingGorilla.SecretStore
 		/// <see cref="ProtectedDocumentKey"/> and the IV from <see cref="InitialisationVector"/>
 		///</summary>
 		public byte[] ProtectedSecretValue { get; set; }
+
+		/// <inheritdoc />
+		public override bool Equals(object obj)
+		{
+			if (obj is not ProtectedSecret other)
+			{
+				return false;
+			}
+
+			return base.Equals(obj)
+			       && string.Equals(MasterKeyId, other.MasterKeyId, StringComparison.Ordinal)
+			       && ((ProtectedDocumentKey == null && other.ProtectedDocumentKey == null) ||
+			           (ProtectedDocumentKey != null && other.ProtectedDocumentKey != null &&
+			            ProtectedDocumentKey.SequenceEqual(other.ProtectedDocumentKey)))
+			       && ((InitialisationVector == null && other.InitialisationVector == null) ||
+			           (InitialisationVector != null && other.InitialisationVector != null &&
+			            InitialisationVector.SequenceEqual(other.InitialisationVector)))
+			       && ((ProtectedSecretValue == null && other.ProtectedSecretValue == null) ||
+			           (ProtectedSecretValue != null && other.ProtectedSecretValue != null &&
+			            ProtectedSecretValue.SequenceEqual(other.ProtectedSecretValue)));
+		}
+
+		/// <inheritdoc />
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(base.GetHashCode(), MasterKeyId,
+				ProtectedDocumentKey != null ? BitConverter.ToString(ProtectedDocumentKey) : string.Empty,
+				InitialisationVector != null ? BitConverter.ToString(InitialisationVector) : string.Empty,
+				ProtectedSecretValue != null ? BitConverter.ToString(ProtectedSecretValue) : string.Empty);
+		}
 	}
 }

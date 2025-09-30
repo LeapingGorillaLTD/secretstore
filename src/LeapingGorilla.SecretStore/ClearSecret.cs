@@ -11,6 +11,8 @@
 //    limitations under the License.
 // */
 
+using System;
+
 namespace LeapingGorilla.SecretStore
 {
 	///<summary>An unprotected secret</summary>
@@ -24,6 +26,29 @@ namespace LeapingGorilla.SecretStore
 			:base(applicationName, secretName)
 		{
 			Value = secretValue;
+		}
+
+		/// <inheritdoc />
+		public override bool Equals(object obj)
+		{
+			if (obj is not ClearSecret other)
+			{
+				return false;
+			}
+
+			return base.Equals(obj)
+			       && string.Equals(Value, other.Value, StringComparison.Ordinal);
+		}
+
+		/// <inheritdoc />
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				var hashCode = base.GetHashCode();
+				hashCode = (hashCode * 397) ^ (Value != null ? Value.GetHashCode() : 0);
+				return hashCode;
+			}
 		}
 	}
 }

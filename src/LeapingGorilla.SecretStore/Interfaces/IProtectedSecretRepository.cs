@@ -12,6 +12,7 @@
 // */
 
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using LeapingGorilla.SecretStore.Exceptions;
 
@@ -38,6 +39,7 @@ namespace LeapingGorilla.SecretStore.Interfaces
 		/// </summary>
 		/// <param name="applicationName">Name of the application of the secret</param>
 		/// <param name="secretName">Name of the secret to retrieve</param>
+		/// <param name="cancellationToken">Optional cancellation token</param>
 		/// <returns>
 		/// A <see cref="ProtectedSecret"/> for the given Application Name/Secret Name pair.
 		/// A <see cref="SecretNotFoundException"/> will be thrown if none found.
@@ -45,7 +47,7 @@ namespace LeapingGorilla.SecretStore.Interfaces
 		/// <exception cref="SecretNotFoundException">
 		/// Thrown if no secret found for the give application/secret name combination
 		/// </exception>
-		Task<ProtectedSecret> GetAsync(string applicationName, string secretName);
+		Task<ProtectedSecret> GetAsync(string applicationName, string secretName, CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// Save the given <see cref="ProtectedSecret"/> to the backing data store.
@@ -57,20 +59,22 @@ namespace LeapingGorilla.SecretStore.Interfaces
 		/// Save the given <see cref="ProtectedSecret"/> to the backing data store asynchronously.
 		/// </summary>
 		/// <param name="secret">The <see cref="ProtectedSecret"/> to be saved</param>
-		Task SaveAsync(ProtectedSecret secret);
+		/// <param name="cancellationToken">Optional cancellation token</param>
+		Task SaveAsync(ProtectedSecret secret, CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// Gets all secrets for a single application.
 		/// </summary>
 		/// <param name="applicationName">Name of the application to retrieve secrets for.</param>
-		/// <returns>Enumeration of all of the secrets for a single application</returns>
+		/// <returns>Enumeration of all secrets for a single application</returns>
 		IEnumerable<ProtectedSecret> GetAllForApplication(string applicationName);
 
 		/// <summary>
-		/// Gets all secrets for a single application iasynchronously.
+		/// Gets all secrets for a single application asynchronously.
 		/// </summary>
 		/// <param name="applicationName">Name of the application to retrieve secrets for.</param>
-		/// <returns>Enumeration of all of the secrets for a single application</returns>
-		Task<IEnumerable<ProtectedSecret>> GetAllForApplicationAsync(string applicationName);
+		/// <param name="cancellationToken">Optional cancellation token</param>
+		/// <returns>Enumeration of all secrets for a single application</returns>
+		Task<IEnumerable<ProtectedSecret>> GetAllForApplicationAsync(string applicationName, CancellationToken cancellationToken = default);
 	}
 }

@@ -15,14 +15,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
-using LeapingGorilla.SecretStore.Aws.Exceptions;
 using LeapingGorilla.SecretStore.Exceptions;
 using LeapingGorilla.SecretStore.Interfaces;
+using Microsoft.Extensions.Logging;
 using Polly;
 
 namespace LeapingGorilla.SecretStore.Aws
@@ -30,8 +30,8 @@ namespace LeapingGorilla.SecretStore.Aws
 	///<summary>This class is thread safe and should be instantiated as a Singleton.</summary>
 	public class AwsDynamoProtectedSecretRepository : IProtectedSecretRepository, ICreateProtectedSecretTable, IDisposable
 	{
+		private readonly ILogger<AwsDynamoProtectedSecretRepository> _log;
 		private string _tableName;
-		private readonly Lazy<Table> _table;
 		private IAmazonDynamoDB _client;
 		private bool _disposed;
 
@@ -45,40 +45,29 @@ namespace LeapingGorilla.SecretStore.Aws
 			public const string InitialisationVector = "InitialisationVector";
 		}
 
-		private AwsDynamoProtectedSecretRepository(string tableName)
+		private AwsDynamoProtectedSecretRepository(
+			ILogger<AwsDynamoProtectedSecretRepository> log,
+			string tableName)
 		{
+			_log = log;
 			_tableName = tableName;
-			_table = new Lazy<Table>(Init, LazyThreadSafetyMode.ExecutionAndPublication);
 		}
 		
-		public AwsDynamoProtectedSecretRepository(AmazonDynamoDBConfig config, string tableName)
-			: this(tableName)
+		public AwsDynamoProtectedSecretRepository(
+			ILogger<AwsDynamoProtectedSecretRepository> log,
+			AmazonDynamoDBConfig config, 
+			string tableName)
+			: this(log, tableName)
 		{
 			_client = config == null ? new AmazonDynamoDBClient() : new AmazonDynamoDBClient(config);
 		}
 		
-		public AwsDynamoProtectedSecretRepository(IAmazonDynamoDB client, string tableName)
-			: this(tableName)
+		public AwsDynamoProtectedSecretRepository(
+			ILogger<AwsDynamoProtectedSecretRepository> log,
+			IAmazonDynamoDB client, string tableName)
+			: this(log, tableName)
 		{
 			_client = client;
-		}
-
-		private Table Init()
-		{
-			Table table = null;
-			var loadTableSuccess = 
-				Policy
-					.HandleResult(false)
-					.WaitAndRetry(3, (retryCount, ctx) => TimeSpan.FromSeconds(retryCount * 2))
-					.Execute(() => Table.TryLoadTable(_client, _tableName, out table));
-
-
-			if (!loadTableSuccess)
-			{
-				throw new DynamoTableDoesNotExistException(_tableName);
-			}
-
-			return table;
 		}
 
 		/// <inheritdoc />
@@ -107,8 +96,18 @@ namespace LeapingGorilla.SecretStore.Aws
 				}
 			};
 
-			// ReSharper disable once UnusedVariable - Used to test for existence
-			if (!Table.TryLoadTable(_client, _tableName, out var table))
+			bool tableExists;
+			try
+			{
+				var describeTableResponse = await _client.DescribeTableAsync(_tableName);
+				tableExists = describeTableResponse.HttpStatusCode == HttpStatusCode.OK;
+			}
+			catch (ResourceNotFoundException)
+			{
+				tableExists = false;
+			}
+			
+			if (!tableExists)
 			{
 				await _client.CreateTableAsync(tableDetail);
 				var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
@@ -133,20 +132,30 @@ namespace LeapingGorilla.SecretStore.Aws
 		}
 
 		/// <inheritdoc />
-		public async Task<ProtectedSecret> GetAsync(string applicationName, string secretName)
+		public async Task<ProtectedSecret> GetAsync(
+			string applicationName, 
+			string secretName,
+			CancellationToken cancellationToken = default)
 		{
 			if (_disposed)
 			{
-				throw new ObjectDisposedException("AwsDynamoProtectedSecretRepository");
+				throw new ObjectDisposedException(nameof(AwsDynamoProtectedSecretRepository));
 			}
-
-			var document = await _table.Value.GetItemAsync(applicationName, secretName).ConfigureAwait(false);
-			if (document == null)
+			
+			try
 			{
-				throw new SecretNotFoundException(applicationName, secretName);
+				var getItemResponse = await _client.GetItemAsync(_tableName, CreateKeyDescription(applicationName, secretName), cancellationToken);
+				if (getItemResponse.Item == null)
+				{
+					throw new SecretNotFoundException(applicationName, secretName);
+				}
+				return getItemResponse.Item.ToProtectedSecret();
 			}
-
-			return document.ToProtectedSecret();
+			catch (AmazonDynamoDBException ex)
+			{
+				_log.LogWarning(ex, "Failed to find secret {SecretName} for application {ApplicationName} in table {TableName}", secretName, applicationName, _tableName);
+				throw;
+			}
 		}
 
 		/// <inheritdoc />
@@ -158,25 +167,39 @@ namespace LeapingGorilla.SecretStore.Aws
 		}
 		
 		/// <inheritdoc />
-		public async Task<IEnumerable<ProtectedSecret>> GetAllForApplicationAsync(string applicationName)
+		public async Task<IEnumerable<ProtectedSecret>> GetAllForApplicationAsync(
+			string applicationName,
+			CancellationToken cancellationToken = default)
 		{
 			if (_disposed)
 			{
 				throw new ObjectDisposedException("AwsDynamoProtectedSecretRepository");
 			}
 
-			var filter = new ScanFilter();
-			filter.AddCondition(Fields.ApplicationName, ScanOperator.Equal, applicationName);
-			
-			var search = _table.Value.Scan(filter);
-			var bg = await search.GetRemainingAsync().ConfigureAwait(false);
-
-			if (bg == null || bg.Count == 0)
+			var scanReq = new ScanRequest(_tableName)
 			{
-				return Enumerable.Empty<ProtectedSecret>();
-			}
+				FilterExpression = $"{Fields.ApplicationName} = :v_appname",
+				ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+				{
+					{ ":v_appname", new AttributeValue { S = applicationName } }
+				}
+			};
 
-			return bg.Select(AwsExtensions.ToProtectedSecret).ToList();
+			try
+			{
+				var scanResult = await _client.ScanAsync(scanReq, cancellationToken);
+				if (scanResult.Items == null || scanResult.Items.Count == 0)
+				{
+					return Enumerable.Empty<ProtectedSecret>();
+				}
+				
+				return scanResult.Items.Select(AwsExtensions.ToProtectedSecret).ToList();
+			}
+			catch (AmazonDynamoDBException ex)
+			{
+				_log.LogWarning(ex, "Failed to scan for secrets for application {ApplicationName} in table {TableName}", applicationName, _tableName);
+				throw;
+			}
 		}
 
 		/// <inheritdoc />
@@ -188,24 +211,37 @@ namespace LeapingGorilla.SecretStore.Aws
 		}
 
 		/// <inheritdoc />
-		public async Task SaveAsync(ProtectedSecret secret)
+		public async Task SaveAsync(
+			ProtectedSecret secret,
+			CancellationToken cancellationToken = default)
 		{
 			if (_disposed)
 			{
 				throw new ObjectDisposedException("AwsDynamoProtectedSecretRepository");
 			}
 
-			var doc = new Document
+			var res = await _client.PutItemAsync(_tableName, secret.ToAttributeMap(), cancellationToken);
+			if (res.HttpStatusCode != HttpStatusCode.OK)
 			{
-				[Fields.ApplicationName] = secret.ApplicationName,
-				[Fields.SecretName] = secret.Name,
-				[Fields.MasterKeyId] = secret.MasterKeyId,
-				[Fields.ProtectedDocumentKey] = secret.ProtectedDocumentKey,
-				[Fields.ProtectedSecretValue] = secret.ProtectedSecretValue,
-				[Fields.InitialisationVector] = secret.InitialisationVector
+				throw new SecretStoreException($"Failed to save secret {secret.Name} for application {secret.ApplicationName} to table {_tableName}. AWS returned status code {res.HttpStatusCode}");
+			}
+		}
+		
+		
+		
+		/// <summary>
+		/// Create a Key Descriptor for the given application and secret name
+		/// </summary>
+		/// <param name="applicationName">Name of the application that the secret belongs to</param>
+		/// <param name="secretName">Name of the secret that we are retrieving</param>
+		/// <returns>Dictionary that can be passed to a GetItem call</returns>
+		private Dictionary<string, AttributeValue> CreateKeyDescription(string applicationName, string secretName)
+		{
+			return new Dictionary<string, AttributeValue>
+			{
+				{ Fields.ApplicationName, new AttributeValue { S = applicationName } },
+				{ Fields.SecretName, new AttributeValue { S = secretName } }
 			};
-
-			await _table.Value.PutItemAsync(doc).ConfigureAwait(false);
 		}
 
 		[ExcludeFromCodeCoverage]

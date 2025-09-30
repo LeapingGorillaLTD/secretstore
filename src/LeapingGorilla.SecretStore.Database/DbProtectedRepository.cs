@@ -14,6 +14,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
 using LeapingGorilla.SecretStore.Exceptions;
@@ -93,7 +94,7 @@ namespace LeapingGorilla.SecretStore.Database
 		}
 
 		/// <inheritdoc />
-		public async Task<ProtectedSecret> GetAsync(string applicationName, string secretName)
+		public async Task<ProtectedSecret> GetAsync(string applicationName, string secretName, CancellationToken cancellationToken = default)
 		{
 			using var conn = CreateConnection();
 			var secret = await conn.QuerySingleOrDefaultAsync<ProtectedSecret>($"SELECT * FROM {tableName} WHERE applicationName=@applicationName AND secretName=@secretName",
@@ -110,7 +111,7 @@ namespace LeapingGorilla.SecretStore.Database
 		}
 
 		/// <inheritdoc />
-		public virtual async Task SaveAsync(ProtectedSecret secret)
+		public virtual async Task SaveAsync(ProtectedSecret secret, CancellationToken cancellationToken = default)
 		{
 			using var conn = CreateConnection(requiresWrite: true);
 			await conn.ExecuteAsync(UpsertSql, secret);
@@ -122,16 +123,16 @@ namespace LeapingGorilla.SecretStore.Database
 			var sql = @$"SELECT * FROM {tableName} WHERE applicationName=@applicationName";
 			
 			using var conn = CreateConnection();
-			return (conn.Query<ProtectedSecret>(sql, new { applicationName }) ?? Enumerable.Empty<ProtectedSecret>()).ToList();
+			return conn.Query<ProtectedSecret>(sql, new { applicationName }).ToList();
 		}
 
 		/// <inheritdoc />
-		public async Task<IEnumerable<ProtectedSecret>> GetAllForApplicationAsync(string applicationName)
+		public async Task<IEnumerable<ProtectedSecret>> GetAllForApplicationAsync(string applicationName, CancellationToken cancellationToken = default)
 		{
 			var sql = @$"SELECT * FROM {tableName} WHERE applicationName=@applicationName";
 			
 			using var conn = CreateConnection();
-			return (await conn.QueryAsync<ProtectedSecret>(sql, new { applicationName }) ?? Enumerable.Empty<ProtectedSecret>()).ToList();
+			return (await conn.QueryAsync<ProtectedSecret>(sql, new { applicationName })).ToList();
 		}
 
 		/// <summary>

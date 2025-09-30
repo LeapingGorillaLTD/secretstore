@@ -19,6 +19,10 @@ using Amazon;
 using Amazon.DynamoDBv2;
 using LeapingGorilla.SecretStore.Aws;
 using LeapingGorilla.SecretStore.Interfaces;
+using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.SystemConsole.Themes;
 
 namespace LeapingGorilla.SecretStore.CommandLine
 {
@@ -73,7 +77,18 @@ namespace LeapingGorilla.SecretStore.CommandLine
 			    RegionEndpoint = region
 		    };
 
-		    var repo = new AwsDynamoProtectedSecretRepository(config, tableName);
+		    var logger = new LoggerConfiguration()
+			    .WriteTo.Console()
+			    .MinimumLevel.Verbose()
+			    .CreateLogger();
+		    
+		    var logFactory = new LoggerFactory().AddSerilog(logger);
+
+		    var repo = new AwsDynamoProtectedSecretRepository(
+			    logFactory.CreateLogger<AwsDynamoProtectedSecretRepository>(),
+			    config, 
+			    tableName);
+		    
 		    var em = new EncryptionManager(km);
 		    var ss = new SecretStore(repo, em);
 

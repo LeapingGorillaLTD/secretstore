@@ -15,6 +15,8 @@ using Amazon;
 using Amazon.DynamoDBv2;
 using LeapingGorilla.SecretStore.Aws;
 using LeapingGorilla.Testing.NUnit;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace LeapingGorilla.SecretStore.IntegrationTests.AwsDynamoProtectedSecretRepositoryTests
 {
@@ -24,6 +26,22 @@ namespace LeapingGorilla.SecretStore.IntegrationTests.AwsDynamoProtectedSecretRe
 
 		public AmazonDynamoDBConfig Config => new AmazonDynamoDBConfig { RegionEndpoint = RegionEndpoint.EUWest1 };
 
-		public AwsDynamoProtectedSecretRepository Repository => new AwsDynamoProtectedSecretRepository(Config,  TableName);
+		public AwsDynamoProtectedSecretRepository Repository
+		{
+			get
+			{
+				var logger = new LoggerConfiguration()
+					.WriteTo.Console()
+					.MinimumLevel.Verbose()
+					.CreateLogger();
+		    
+				var logFactory = new LoggerFactory().AddSerilog(logger);
+
+				return new AwsDynamoProtectedSecretRepository(
+					logFactory.CreateLogger<AwsDynamoProtectedSecretRepository>(),
+					Config,
+					TableName);
+			}
+		}
 	}
 }

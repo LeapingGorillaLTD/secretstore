@@ -11,6 +11,8 @@
 //    limitations under the License.
 // */
 
+using System;
+
 namespace LeapingGorilla.SecretStore
 {
 	///<summary>Models the values common to any secret</summary>
@@ -34,6 +36,29 @@ namespace LeapingGorilla.SecretStore
 		{
 			ApplicationName = applicationName;
 			Name = name;
+		}
+
+		/// <inheritdoc />
+		public override bool Equals(object obj)
+		{
+			if (obj is not Secret other)
+			{
+				return false;
+			}
+
+			return string.Equals(ApplicationName, other.ApplicationName, StringComparison.Ordinal)
+			       && string.Equals(Name, other.Name, StringComparison.Ordinal);
+		}
+
+		/// <inheritdoc />
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				var hashCode = ApplicationName != null ? ApplicationName.GetHashCode() : 0;
+				hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
+				return hashCode;
+			}
 		}
 	}
 }
